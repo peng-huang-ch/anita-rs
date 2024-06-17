@@ -1,0 +1,17 @@
+[package]
+name = "r-keys"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rayon.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
+solana-sdk = { workspace = true }
+
+r-storage = { path = "../storage" }
+r-tracing = { path = "../tracing" }

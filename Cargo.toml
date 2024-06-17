@@ -1,0 +1,38 @@
+[workspace]
+members = [
+	"bin",
+	"crates/api",     # svc api
+	"crates/keys",    # svc manager
+	"crates/storage", # svc storage
+	"crates/tracing", # svc tracing
+]
+
+# Explicitly set the resolver to version 2, which is the default for packages with edition >= 2021
+# https://doc.rust-lang.org/edition-guide/rust-2021/default-cargo-resolver.html
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+dotenvy = "0.15.7"
+tracing = "0.1.0"
+
+chrono = { version = "0.4.38", features = ["serde"] }
+rayon = "1.10"
+clap = { version = "4", features = ["derive"] }
+eyre = "0.6.12"
+
+solana-sdk = "1.18"
+
+futures = "0.3"
+futures-util = "0.3"
+futures-core = "0.3"
+pin-project = "1.0.12"
+tokio = { version = "1.38.0", default-features = false }
+
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
