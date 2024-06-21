@@ -1186,7 +1186,7 @@ dependencies = [
 [[package]]
 name = "diesel-async"
 version = "0.4.1"
-source = "git+https://github.com/weiznich/diesel_async#74867bd68e3b600709911b5854a598cbec2ae4a3"
+source = "git+https://github.com/weiznich/diesel_async.git?rev=74867bd68#74867bd68e3b600709911b5854a598cbec2ae4a3"
 dependencies = [
  "async-trait",
  "bb8",

@@ -9,17 +9,18 @@ license.workspace = true
 
 [dependencies]
 tracing = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+chrono = { workspace = true, features = ["serde"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
 
 # database
-chrono = { version = "0.4.26", features = ["serde"] }
-diesel = { version = "2.2", default-features = false, features = [
-	"postgres",
+diesel = { version = "2.2.1", default-features = false, features = [
 	"chrono",
+	"postgres",
 ] }
-diesel-async = { git = "https://github.com/weiznich/diesel_async", default-features = false, features = [
+diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = '74867bd68', default-features = false, features = [
 	"bb8",
 	"postgres",
 	"async-connection-wrapper",
