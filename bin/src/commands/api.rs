@@ -17,7 +17,7 @@ pub struct Command {
 impl Command {
     /// Execute `api` command
     pub async fn execute(self) -> eyre::Result<()> {
-        let _ = init_api(self.port, self.database_url.as_str()).await;
+        let _ = init_api(self.port, self.database_url.as_str()).await?;
         Ok(())
     }
 }

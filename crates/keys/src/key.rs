@@ -36,9 +36,7 @@ pub fn generator_v1(num_threads: u32, target_suffix: &str) -> String {
             let pubkey_str = bs58::encode(pubkey).into_string();
 
             if pubkey_str.ends_with(target_suffix) {
-                if found
-                    .compare_exchange(false, true, Ordering::SeqCst, Ordering::Relaxed)
-                    .is_ok()
+                if found.compare_exchange(false, true, Ordering::SeqCst, Ordering::Relaxed).is_ok()
                 {
                     let mut guard = result.lock().unwrap();
 

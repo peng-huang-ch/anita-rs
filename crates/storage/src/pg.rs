@@ -19,26 +19,18 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 pub async fn init_db(database_url: &str) -> DbPool {
     let mgr = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
 
-    Pool::builder()
-        .build(mgr)
-        .await
-        .expect("could not build connection pool")
+    Pool::builder().build(mgr).await.expect("could not build connection pool")
 }
 
 #[tracing::instrument(skip(database_url))]
 pub async fn run_migrations(database_url: &str) {
     let pool = init_db(database_url).await;
-    let async_conn = pool
-        .dedicated_connection()
-        .await
-        .expect("could not get connection");
+    let async_conn = pool.dedicated_connection().await.expect("could not get connection");
     let mut async_wrapper: AsyncConnectionWrapper<AsyncPgConnection> =
         AsyncConnectionWrapper::from(async_conn);
 
     tokio::task::spawn_blocking(move || {
-        async_wrapper
-            .run_pending_migrations(crate::MIGRATIONS)
-            .expect("failed to run migrations");
+        async_wrapper.run_pending_migrations(crate::MIGRATIONS).expect("failed to run migrations");
     })
     .await
     .expect("failed to run migrations in tokio::task::spawn_blocking");

@@ -23,6 +23,7 @@ clap = { version = "4", features = ["derive", "env"] }
 r-api = { path = "../crates/api" }
 r-keys = { path = "../crates/keys" }
 r-storage = { path = "../crates/storage" }
+r-tracing = { path = "../crates/tracing" }
 
 [build-dependencies]
-vergen = { version = "8.3.1", features = ["build", "cargo", "git", "gitcl"] }
+vergen = { version = "8.3.2", features = ["build", "cargo", "git", "gitcl"] }

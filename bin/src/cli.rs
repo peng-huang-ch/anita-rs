@@ -1,6 +1,8 @@
-use crate::commands::{api, db, key};
 use clap::{Parser, Subcommand};
 
+use r_tracing::init_logging;
+
+use crate::commands::{api, db, key};
 #[derive(Parser)]
 #[clap(version, about)]
 #[clap(propagate_version = true)]
@@ -33,14 +35,18 @@ pub enum Commands {
 
 /// Parse CLI options, set up logging and run the chosen command.
 pub async fn run() -> eyre::Result<()> {
-    // let opt = Cli::parse();
     let opt = Cli::from_env_and_args();
+
+    let server: String = std::env::var("LOG_SERVER").unwrap_or("anita::api".to_string());
+    let level = std::env::var("LOG_LEVEL").unwrap_or("info".to_string());
+    let guard = init_logging(server, level);
 
     match opt.command {
         Commands::Api(command) => command.execute().await?,
         Commands::DB(command) => command.execute().await?,
         Commands::Key(command) => command.execute().await?,
     };
+    drop(guard);
     Ok(())
 }
 

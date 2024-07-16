@@ -7,4 +7,5 @@ async fn main() {
         error!("Error: {err:?}");
         std::process::exit(1);
     }
+    println!("Done");
 }

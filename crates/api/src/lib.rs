@@ -8,7 +8,6 @@ use tracing::{debug, warn};
 use tracing_actix_web::TracingLogger;
 
 use r_storage::init_db;
-use r_tracing::init_logging;
 
 mod errors;
 mod handlers;
@@ -18,10 +17,8 @@ pub async fn init_api(port: u16, database_url: &str) -> std::io::Result<()> {
     let addr = format!("0.0.0.0:{}", port);
     debug!(target: "init", "Initializing database...");
     let pool = init_db(database_url).await;
-    debug!(target: "init", "Database initialized.");
-    debug!(target: "init", "Start listening on {}...", addr);
+    debug!(target: "init", "Database initialized and listening on {}...", addr);
 
-    let guard = init_logging("app".to_string(), "debug".to_string());
     let srv: actix_web::dev::Server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(pool.clone()))
@@ -40,7 +37,6 @@ pub async fn init_api(port: u16, database_url: &str) -> std::io::Result<()> {
 
     let shutdown_handle = shutdown(async move {
         srv_handle.stop(true).await;
-        drop(guard);
         let (tx, rx) = oneshot::channel();
         tokio::task::spawn_blocking(|| {
             debug!("shutting down the tracer provider.");
@@ -52,16 +48,12 @@ pub async fn init_api(port: u16, database_url: &str) -> std::io::Result<()> {
         .expect("shutdown tracer provider failed.");
 
         // Wrap the future with a `Timeout` set to expire in 10 seconds.
-        if tokio::time::timeout(Duration::from_secs(10), rx)
-            .await
-            .is_err()
-        {
+        if tokio::time::timeout(Duration::from_secs(10), rx).await.is_err() {
             warn!("timed out while shutting down tracing, exiting anyway");
         };
     });
 
     let shutdown_task = tokio::spawn(shutdown_handle);
     let _ = tokio::try_join!(server_task, shutdown_task).expect("unable to join tasks");
-
     Ok(())
 }

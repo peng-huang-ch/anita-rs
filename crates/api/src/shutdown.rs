@@ -9,28 +9,43 @@ where
 {
     // listen for ctrl-c
     let ctrl_c = async {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("Failed to install Ctrl+C handler");
+        tokio::signal::ctrl_c().await.expect("Failed to install Ctrl+C handler");
     };
 
-    #[cfg(unix)]
-    let terminate = async {
+    let stream = async {
         signal::unix::signal(signal::unix::SignalKind::terminate())
             .expect("Failed to install signal handler")
             .recv()
             .await;
     };
 
-    tokio::select! {
-        _ = ctrl_c => {
-            info!("Received ctrl-c, shutting down...");
-        },
-        _ = terminate => {
-            info!("Received terminate, shutting down...");
-        },
+    #[cfg(unix)]
+    {
+        tokio::select! {
+            _ = ctrl_c => {
+                info!("Received ctrl-c, shutting down...");
+            },
+            _ = stream => {
+                info!("Received terminate, shutting down...");
+            },
+        }
+        info!("signal received, starting graceful shutdown.");
+        fut.await;
+        info!("worker shutdown complete.");
     }
-    info!("signal received, starting graceful shutdown.");
-    fut.await;
-    info!("worker shutdown complete.");
+
+    #[cfg(not(unix))]
+    {
+        let ctrl_c = pin!(ctrl_c);
+        let fut = pin!(fut);
+
+        tokio::select! {
+            _ = ctrl_c => {
+                info!("Received ctrl-c, shutting down...");
+            },
+            _ = stream => {
+                info!("Received terminate, shutting down...");
+            },
+        }
+    }
 }

@@ -66,11 +66,7 @@ impl Command {
             Subcommands::Vanity { count, .. } => loop {
                 let mut conn = pool.get().await?;
                 let secret = generator(count.into(), suffix.as_str());
-                let key = Key {
-                    suffix: suffix.clone(),
-                    secret: secret.clone(),
-                    used_at: None,
-                };
+                let key = Key { suffix: suffix.clone(), secret: secret.clone(), used_at: None };
                 let _ = create_key(&mut conn, key).await?;
                 println!("key: {}", secret);
             },

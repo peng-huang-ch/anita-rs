@@ -41,12 +41,7 @@ mod tests {
         headers.insert("Accept", "application/json".parse().unwrap());
         headers.insert("Content-Type", "application/json".parse().unwrap());
         headers.insert("Priority", "u=1, i".parse().unwrap());
-        headers.insert(
-            "Referer",
-            "https://www.dextools.io/app/cn/solana/pairs"
-                .parse()
-                .unwrap(),
-        );
+        headers.insert("Referer", "https://www.dextools.io/app/cn/solana/pairs".parse().unwrap());
         headers.insert("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36".parse().unwrap());
 
         let request = client.request(reqwest::Method::GET, "https://www.dextools.io/shared/analytics/pairs?limit=51&interval=24h&page=1&chain=solana&exchange=dexut1mp8&minLiquidity=1000000&dextScore=80&excludeNative=true")
