@@ -11,8 +11,14 @@ use tracing::instrument;
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct DbKey {
     pub id: i32,
+    #[serde(rename = "chain")]
+    pub chain: String,
     #[serde(rename = "secret")]
     pub secret: String,
+    #[serde(rename = "pubkey")]
+    pub pubkey: String,
+    #[serde(rename = "address")]
+    pub address: String,
     #[serde(rename = "suffix")]
     pub suffix: String,
     #[serde(rename = "usedAt")]
@@ -26,8 +32,14 @@ pub struct DbKey {
 #[diesel(table_name = keys)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Key {
+    #[serde(rename = "chain")]
+    pub chain: String,
     #[serde(rename = "secret")]
     pub secret: String,
+    #[serde(rename = "pubkey")]
+    pub pubkey: String,
+    #[serde(rename = "pubkey")]
+    pub address: String,
     #[serde(rename = "suffix")]
     pub suffix: String,
     #[serde(rename = "usedAt")]
