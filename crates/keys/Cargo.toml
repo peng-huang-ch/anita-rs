@@ -11,11 +11,12 @@ license.workspace = true
 rayon.workspace = true
 serde = { workspace = true }
 serde_json = { workspace = true }
-solana-sdk = { workspace = true }
 clap = { workspace = true }
+
+r-storage = { path = "../storage" }
+r-tracing = { path = "../tracing" }
 
 strum = { version = "0.26", features = ["derive"] }
 strum_macros = { version = "0.26" }
 
-r-storage = { path = "../storage" }
-r-tracing = { path = "../tracing" }
+solana-sdk = "2.0.2"

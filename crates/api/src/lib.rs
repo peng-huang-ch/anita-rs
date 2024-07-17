@@ -1,6 +1,5 @@
 use actix_web::{web, App, HttpServer};
 use actix_web_opentelemetry::{RequestMetrics, RequestTracing};
-
 use shutdown::shutdown;
 use std::time::Duration;
 use tokio::sync::oneshot;
