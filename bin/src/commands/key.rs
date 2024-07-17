@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 use r_keys::{keygen::keygen, keypair::Chain};
 use r_storage::{
     init_db,
-    models::keys::{create_key, get_valid_suffix_key, Key},
+    models::keys::{create_key, get_key_by_suffix, Key},
 };
 
 #[derive(Parser, Debug)]
@@ -55,7 +55,7 @@ impl Command {
         match self.command {
             Subcommands::Get => {
                 let mut conn = pool.get().await?;
-                let key = get_valid_suffix_key(&mut conn, suffix).await?;
+                let key = get_key_by_suffix(&mut conn, suffix).await?;
                 println!("key: {:?}", key);
             }
             Subcommands::New { count, .. } => {

@@ -1,6 +1,7 @@
-use crate::errors::SrvError;
 use actix_web::{HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
+
+use crate::errors::SrvError;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct HealthResponse {

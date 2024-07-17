@@ -1,4 +1,6 @@
-use actix_web::{web, App, HttpServer};
+use actix_identity::IdentityMiddleware;
+use actix_session::{storage::CookieSessionStore, SessionMiddleware};
+use actix_web::{cookie::Key, web, App, HttpServer};
 use actix_web_opentelemetry::{RequestMetrics, RequestTracing};
 use shutdown::shutdown;
 use std::time::Duration;
@@ -10,7 +12,17 @@ use r_storage::init_db;
 
 mod errors;
 mod handlers;
+// mod middlewares;
 mod shutdown;
+
+fn get_session_key_from_env() -> Key {
+    let key = std::env::var("SECRET_KEY")
+        .ok()
+        .and_then(|key| bs58::decode(key).into_vec().ok())
+        .and_then(|decoded| Key::try_from(decoded.as_slice()).ok())
+        .map_or_else(Key::generate, |key| key);
+    key
+}
 
 pub async fn init_api(port: u16, database_url: &str) -> std::io::Result<()> {
     let addr = format!("0.0.0.0:{}", port);
@@ -18,14 +30,29 @@ pub async fn init_api(port: u16, database_url: &str) -> std::io::Result<()> {
     let pool = init_db(database_url).await;
     debug!(target: "init", "Database initialized and listening on {}...", addr);
 
+    let session_key = get_session_key_from_env();
     let srv: actix_web::dev::Server = HttpServer::new(move || {
+        let session_mw =
+            SessionMiddleware::builder(CookieSessionStore::default(), session_key.clone())
+                // disable secure cookie for local testing
+                .cookie_secure(false)
+                .build();
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .wrap(RequestTracing::new())
             .wrap(RequestMetrics::default())
             .wrap(TracingLogger::default())
+            .wrap(IdentityMiddleware::default())
+            // The identity system is built on top of sessions. You must install the session
+            // middleware to leverage `actix-identity`. The session middleware must be mounted
+            // AFTER the identity middleware: `actix-web` invokes middleware in the OPPOSITE
+            // order of registration when it receives an incoming request.
+            .wrap(session_mw)
             .service(handlers::health::get_health)
-            .service(handlers::key::get_key)
+            .service(handlers::key::key_gen)
+            .service(handlers::key::key_sign)
+            .service(handlers::auth::login)
+            .service(handlers::auth::logout)
     })
     .disable_signals()
     .bind(addr)?

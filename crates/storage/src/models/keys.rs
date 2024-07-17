@@ -1,9 +1,10 @@
-use crate::{schema::keys, DbConnection, DbError};
 use chrono;
 use diesel::{insert_into, prelude::*, update};
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize}; // Add this line to import the chrono crate
 use tracing::instrument;
+
+use crate::{schema::keys, DbConnection, DbError};
 
 /// Key details.
 #[derive(Queryable, Selectable, AsChangeset, PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -47,7 +48,7 @@ pub struct Key {
 }
 
 #[instrument(skip(conn))]
-pub async fn get_valid_suffix_key(
+pub async fn get_key_by_suffix(
     conn: &mut DbConnection<'_>,
     suffix: String,
 ) -> Result<Option<DbKey>, DbError> {
@@ -102,4 +103,11 @@ pub async fn create_keys<'a>(
         .execute(conn)
         .await?;
     Ok(rows_inserted)
+}
+
+#[instrument(skip(conn))]
+pub async fn get_key_by_id(conn: &mut DbConnection<'_>, id: i32) -> Result<Option<DbKey>, DbError> {
+    let key: Option<DbKey> =
+        keys::table.filter(keys::id.eq(id)).first::<DbKey>(conn).await.optional()?;
+    Ok(key)
 }

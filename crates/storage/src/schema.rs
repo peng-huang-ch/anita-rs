@@ -12,3 +12,18 @@ diesel::table! {
         created_at -> Nullable<Timestamp>,
     }
 }
+
+diesel::table! {
+    users (id) {
+        id -> Int4,
+        username -> Varchar,
+        email -> Varchar,
+        password -> Varchar,
+        created_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::allow_tables_to_appear_in_same_query!(
+    keys,
+    users,
+);

@@ -18,9 +18,9 @@ use crate::solana::SolanaKeyPair;
 )]
 pub enum Chain {
     /// Docs on red
-    #[strum(to_string = "RedRed")]
+    #[strum(to_string = "solana")]
     SOLANA,
-    #[strum(serialize = "b", to_string = "eth")]
+    #[strum(serialize = "e", to_string = "eth")]
     ETH,
     #[strum(disabled)]
     UNKNOWN,
@@ -30,6 +30,7 @@ pub enum Chain {
 pub trait KeypairStrategy {
     fn generate_keypair(&self) -> (String, String, String);
     fn from_secret(&self, secret: &str) -> (String, String, String);
+    fn sign(&self, secret: &str, message: &[u8]) -> String;
 }
 
 #[derive(Debug, Clone)]
@@ -57,5 +58,10 @@ impl KeypairContext {
     pub fn generate_keypair(&self) -> Keypairs {
         let (secret, pubkey, address) = self.strategy.generate_keypair();
         Keypairs { chain: self.chain.clone(), secret, pubkey, address }
+    }
+
+    pub fn sign(&self, secret: &str, message: &str) -> String {
+        let message = message.as_bytes();
+        self.strategy.sign(secret, message)
     }
 }

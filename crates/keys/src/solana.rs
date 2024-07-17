@@ -20,6 +20,12 @@ impl KeypairStrategy for SolanaKeyPair {
         let address = bs58::encode(pubkey).into_string();
         (secret, address.clone(), address)
     }
+
+    fn sign(&self, secret: &str, message: &[u8]) -> String {
+        let keypair = Keypair::from_base58_string(secret);
+        let signature = keypair.sign_message(message);
+        bs58::encode(signature).into_string()
+    }
 }
 
 #[cfg(test)]

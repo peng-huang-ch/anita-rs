@@ -19,4 +19,5 @@ r-tracing = { path = "../tracing" }
 strum = { version = "0.26", features = ["derive"] }
 strum_macros = { version = "0.26" }
 
-solana-sdk = "2.0.2"
+solana-sdk = "2.0.0"
+zeroize = "1.3.0"
