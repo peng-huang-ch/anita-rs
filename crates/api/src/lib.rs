@@ -48,12 +48,25 @@ pub async fn init_api(port: u16, database_url: &str) -> std::io::Result<()> {
             // AFTER the identity middleware: `actix-web` invokes middleware in the OPPOSITE
             // order of registration when it receives an incoming request.
             .wrap(session_mw)
-            .service(handlers::health::get_health)
-            .service(handlers::key::get_suffix_key)
-            .service(handlers::key::key_gen)
-            .service(handlers::key::key_sign)
-            .service(handlers::auth::login)
-            .service(handlers::auth::logout)
+            .service(
+                web::scope("/auth").service(handlers::auth::login).service(handlers::auth::logout),
+            )
+            .service(
+                web::scope("/keys")
+                    .service(handlers::health::get_health)
+                    .service(handlers::key::get_suffix_key)
+                    .service(handlers::key::get_key)
+                    .service(handlers::key::key_gen)
+                    .service(handlers::key::key_sign),
+            )
+            .service(
+                web::scope("/")
+                    .service(handlers::health::get_health)
+                    .service(handlers::key::get_suffix_key)
+                    .service(handlers::key::get_key)
+                    .service(handlers::key::key_gen)
+                    .service(handlers::key::key_sign),
+            )
     })
     .disable_signals()
     .bind(addr)?

@@ -7,15 +7,14 @@ use std::sync::{
 use r_storage::models::chain::Chain;
 use r_tracing::tracing::info;
 
-use crate::keypair::{KeypairContext, Keypairs};
+use crate::{KeypairContext, Keypairs};
 
 /// key blockchain generator.
 ///
 /// # Examples
 ///
 /// ```
-/// use r_storage::models::chain::Chain;
-/// use r_keys::{keygen::keygen, keypair::Keypairs};
+/// use r_keys::{KeypairContext, Keypairs};
 /// let num_threads = 4;
 /// let target_suffix = "p";
 /// let keypair = keygen(num_threads, target_su ffix, Chain::SOLANA);
@@ -34,7 +33,7 @@ pub fn keygen(num_threads: u32, target_suffix: &str, chain: Chain) -> Keypairs {
         let sender = sender.clone();
 
         while !found.load(Ordering::Relaxed) {
-            let context = KeypairContext::new(chain.clone());
+            let context = KeypairContext::from_chain(chain.clone());
             let pairs = context.generate_keypair();
             let pubkey = pairs.pubkey.clone();
             if pubkey.ends_with(&target_suffix) {

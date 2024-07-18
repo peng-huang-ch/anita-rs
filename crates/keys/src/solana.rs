@@ -1,24 +1,29 @@
-use crate::keypair::KeypairStrategy;
 use solana_sdk::bs58;
 use solana_sdk::signature::{Keypair, Signer};
+
+use crate::{Chain, KeypairStrategy, Keypairs};
 
 pub struct SolanaKeyPair;
 
 impl KeypairStrategy for SolanaKeyPair {
-    fn generate_keypair(&self) -> (String, String, String) {
+    fn chain(&self) -> Chain {
+        Chain::SOLANA
+    }
+
+    fn generate_keypair(&self) -> Keypairs {
         let keypair = Keypair::new();
         let secret = keypair.to_base58_string();
         let pubkey = keypair.pubkey();
         let address = bs58::encode(pubkey).into_string();
-        (secret, address.clone(), address)
+        Keypairs { chain: self.chain(), secret, pubkey: address.clone(), address }
     }
 
-    fn from_secret(&self, secret: &str) -> (String, String, String) {
+    fn from_secret(&self, secret: &str) -> Keypairs {
         let keypair = Keypair::from_base58_string(secret);
         let secret = keypair.to_base58_string();
         let pubkey = keypair.pubkey();
         let address = bs58::encode(pubkey).into_string();
-        (secret, address.clone(), address)
+        Keypairs { chain: self.chain(), secret, pubkey: address.clone(), address }
     }
 
     fn sign(&self, secret: &str, message: &[u8]) -> String {
@@ -35,7 +40,7 @@ mod tests {
     #[test]
     fn test_generator() {
         let strategy = Box::new(SolanaKeyPair);
-        let (_secret, pubkey, addr) = strategy.generate_keypair();
-        assert!(pubkey.eq_ignore_ascii_case(addr.as_str()));
+        let pairs = strategy.generate_keypair();
+        assert!(pairs.pubkey.eq_ignore_ascii_case(pairs.address.as_str()));
     }
 }

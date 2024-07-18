@@ -1,9 +1,12 @@
 use clap::{Parser, Subcommand};
 
-use r_keys::{keygen::keygen, keypair::Chain};
+use r_keys::keygen::keygen;
 use r_storage::{
     init_db,
-    models::keys::{create_key, get_key_by_suffix, Key},
+    models::{
+        chain::Chain,
+        keys::{create_key, get_key_by_suffix, NewKey},
+    },
 };
 
 #[derive(Parser, Debug)]
@@ -61,13 +64,13 @@ impl Command {
             Subcommands::New { count, .. } => {
                 let pairs = keygen(count.into(), suffix.as_str(), chain);
                 let mut conn = pool.get().await?;
-                let key = Key {
+                let key = NewKey {
                     chain: pairs.chain.to_string(),
                     secret: pairs.secret.clone(),
                     pubkey: pairs.pubkey.clone(),
                     address: pairs.address.clone(),
                     suffix: suffix.clone(),
-                    used_at: Some(chrono::Utc::now().naive_utc()),
+                    used_at: None,
                 };
                 let _ = create_key(&mut conn, key).await?;
                 println!("key: {}", pairs.secret);
@@ -76,7 +79,7 @@ impl Command {
             Subcommands::Vanity { count, .. } => loop {
                 let mut conn = pool.get().await?;
                 let pairs = keygen(count.into(), suffix.as_str(), chain);
-                let key = Key {
+                let key = NewKey {
                     chain: pairs.chain.to_string(),
                     secret: pairs.secret.clone(),
                     pubkey: pairs.pubkey.clone(),

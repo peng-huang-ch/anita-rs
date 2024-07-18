@@ -29,6 +29,24 @@ pub enum Chain {
     UNKNOWN,
 }
 
+pub trait KeypairStrategy {
+    fn chain(&self) -> Chain;
+    fn generate_keypair(&self) -> Keypairs;
+    fn from_secret(&self, secret: &str) -> Keypairs;
+    fn sign(&self, secret: &str, message: &[u8]) -> String;
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct Keypairs {
+    pub chain: Chain,
+    #[serde(skip_serializing)] // do not serialize secret
+    pub secret: String,
+    pub pubkey: String,
+    pub address: String,
+}
+
+/// Keypair interface.
+
 #[cfg(test)]
 mod tests {
     use super::Chain;

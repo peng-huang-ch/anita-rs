@@ -22,8 +22,8 @@ Login the user that matches the provided credentials to the application.
 
 If successful, a cookie is set with the JWT token for the user. 200 Ok is returned with the token value as well.
 
-ErrorCode::AUTH / 400 Bad Request - Invalid email or password.
-ErrorCode::INTERNAL / 500 Bad Request - Any other error.
+ErrorCode::AUTH / 400 Bad Request - invalid email or password.
+ErrorCode::INTERNAL / 500 Bad Request - any other error.
 "#]
 #[instrument(name = "login", skip(pool, body, request), fields(email = %body.email))]
 #[actix_web::post("/login")]
@@ -48,7 +48,7 @@ pub async fn login(
     Ok(HttpResponse::Ok().json(user))
 }
 
-#[doc = r#"API Resource: /logout [POST]
+#[doc = r#"API Resource: /auth/logout [POST]
 
 Logout the user that matches the provided credentials to the application.
 

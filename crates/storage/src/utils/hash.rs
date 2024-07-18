@@ -1,11 +1,19 @@
-use bcrypt::{hash, verify, DEFAULT_COST};
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
 
-pub fn verify_password(password: &str, hash: &str) -> bool {
-    verify(password, hash).unwrap_or(false)
+pub fn verify_password(password: &str, hashed: &str) -> bool {
+    let parsed_hash = PasswordHash::new(&hashed).expect("Failed to parse password hash");
+    Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok()
 }
 
 pub fn hash_password(password: &str) -> String {
-    hash(password, DEFAULT_COST).expect("Failed to hash password")
+    let salt = SaltString::generate(&mut OsRng);
+    Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .expect("Failed to hash password")
+        .to_string()
 }
 
 #[cfg(test)]
@@ -15,7 +23,8 @@ mod tests {
     #[test]
     fn test_hash() {
         let password = "anita.123";
-        let hashed = hash(password, DEFAULT_COST).expect("Failed to hash password");
+        let hashed = hash_password(password);
+        println!("Hashed: {}", hashed);
         assert!(verify_password(password, &hashed));
     }
 }

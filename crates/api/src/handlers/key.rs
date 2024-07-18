@@ -4,11 +4,12 @@ use actix_identity::Identity;
 use actix_web::{get, http::StatusCode, post, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
-use r_keys::keypair::KeypairContext;
+use r_keys::KeypairContext;
 use r_storage::{
     models::{
         chain::Chain,
-        keys::{create_key, get_key_by_id, get_key_by_suffix, Key},
+        keys::{create_key, get_key_by_suffix, get_secret_by_id, NewKey},
+        users::get_user_by_id,
     },
     DbPool,
 };
@@ -48,7 +49,23 @@ pub struct KeyGenRequest {
 }
 
 #[instrument(skip(pool, identity))]
-#[post("/keys")]
+#[get("/{id}")]
+pub async fn get_key(
+    pool: web::Data<DbPool>,
+    path: web::Path<i32>,
+    identity: Identity,
+) -> actix_web::Result<impl Responder, SrvError> {
+    let _identity = identity;
+
+    let id = path.into_inner();
+    let mut conn = pool.get().await?;
+    let key = get_user_by_id(&mut conn, id).await?;
+
+    Ok(HttpResponse::Ok().json(key))
+}
+
+#[instrument(skip(pool, identity))]
+#[post("/gen")]
 pub async fn key_gen(
     pool: web::Data<DbPool>,
     body: web::Json<KeyGenRequest>,
@@ -57,20 +74,10 @@ pub async fn key_gen(
     let _identity = identity;
     let chain = body.chain;
 
-    // gen a new key
-    let context = KeypairContext::new(chain);
+    let context = KeypairContext::from_chain(chain);
     let keypair = context.generate_keypair();
-    let address: String = keypair.address.clone();
-    let key: Key = Key {
-        chain: chain.to_string(),
-        secret: keypair.secret,
-        pubkey: keypair.pubkey,
-        address: keypair.address,
-        suffix: address[address.len() - 4..].to_ascii_lowercase(),
-        used_at: None,
-    };
-    let mut conn = pool.get().await?;
-    let saved = create_key(&mut conn, key).await?;
+    let key = NewKey::from_keypair(keypair, None);
+    let saved = create_key(&mut pool.get().await?, key).await?;
 
     Ok(HttpResponse::Ok().json(saved))
 }
@@ -97,20 +104,21 @@ pub async fn key_sign(
 ) -> actix_web::Result<impl Responder, SrvError> {
     let _identity = identity;
     let body = body.into_inner();
-    let mut conn = pool.get().await?;
-    let key = get_key_by_id(&mut conn, body.id).await?.ok_or_else(|| {
+
+    let key = get_secret_by_id(&mut pool.get().await?, body.id).await?.ok_or_else(|| {
         SrvErrorKind::Custom(StatusCode::BAD_REQUEST, "Key not found".to_string())
     })?;
-    let chain = Chain::from_str(&key.chain)
+    let chain = Chain::from_str(&key.key.chain)
         .map_err(|_| SrvErrorKind::Custom(StatusCode::BAD_REQUEST, "Invalid chain".to_string()))?;
 
-    // sign the message with the key
-    let context = KeypairContext::new(chain);
-    let signature = context.sign(&key.secret, &body.message);
+    let context = KeypairContext::from_chain(chain);
+
+    let message = body.message.as_bytes();
+    let signature = key.sign(&context.strategy, message);
 
     Ok(HttpResponse::Ok().json(KeySignResponse {
         signature,
         message: body.message,
-        pubkey: key.pubkey,
+        pubkey: key.key.pubkey,
     }))
 }
