@@ -4,19 +4,21 @@ use std::sync::{
     mpsc, Arc,
 };
 
+use r_storage::models::chain::Chain;
 use r_tracing::tracing::info;
 
-use crate::keypair::{Chain, KeypairContext, Keypairs};
+use crate::keypair::{KeypairContext, Keypairs};
 
 /// key blockchain generator.
 ///
 /// # Examples
 ///
 /// ```
-/// use r_keys::{keygen::keygen, keypair::{Chain, Keypairs}};
+/// use r_storage::models::chain::Chain;
+/// use r_keys::{keygen::keygen, keypair::Keypairs};
 /// let num_threads = 4;
 /// let target_suffix = "p";
-/// let keypair = keygen(num_threads, target_suffix, Chain::SOLANA);
+/// let keypair = keygen(num_threads, target_su ffix, Chain::SOLANA);
 /// assert!(keypair.pubkey.ends_with(target_suffix));
 /// ```
 pub fn keygen(num_threads: u32, target_suffix: &str, chain: Chain) -> Keypairs {

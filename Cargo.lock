@@ -2860,12 +2860,15 @@ version = "0.1.0"
 dependencies = [
  "bcrypt",
  "chrono",
+ "clap",
  "diesel",
  "diesel-async",
  "diesel_migrations",
  "dotenvy",
  "serde",
  "serde_json",
+ "strum",
+ "strum_macros",
  "tokio",
  "tracing",
 ]

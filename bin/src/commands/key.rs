@@ -55,7 +55,7 @@ impl Command {
         match self.command {
             Subcommands::Get => {
                 let mut conn = pool.get().await?;
-                let key = get_key_by_suffix(&mut conn, suffix).await?;
+                let key = get_key_by_suffix(&mut conn, chain, suffix).await?;
                 println!("key: {:?}", key);
             }
             Subcommands::New { count, .. } => {

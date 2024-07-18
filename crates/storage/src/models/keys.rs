@@ -1,9 +1,10 @@
 use chrono;
 use diesel::{insert_into, prelude::*, update};
 use diesel_async::{AsyncConnection, RunQueryDsl};
-use serde::{Deserialize, Serialize}; // Add this line to import the chrono crate
+use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
+use super::chain::Chain;
 use crate::{schema::keys, DbConnection, DbError};
 
 /// Key details.
@@ -50,13 +51,16 @@ pub struct Key {
 #[instrument(skip(conn))]
 pub async fn get_key_by_suffix(
     conn: &mut DbConnection<'_>,
+    chain: Chain,
     suffix: String,
 ) -> Result<Option<DbKey>, DbError> {
+    let chain_str = chain.to_string();
     let result = conn
         .transaction::<Option<DbKey>, DbError, _>(|conn| {
             Box::pin(async move {
                 let key: Option<DbKey> = keys::table
                     .filter(keys::used_at.is_null())
+                    .filter(keys::chain.eq(chain_str))
                     .filter(keys::suffix.eq(suffix))
                     .first::<DbKey>(conn)
                     .await
@@ -81,14 +85,15 @@ pub async fn get_key_by_suffix(
 }
 
 #[instrument(skip(conn))]
-pub async fn create_key(conn: &mut DbConnection<'_>, key: Key) -> Result<usize, DbError> {
-    let rows_inserted = insert_into(keys::table)
+pub async fn create_key(conn: &mut DbConnection<'_>, key: Key) -> Result<DbKey, DbError> {
+    let key = insert_into(keys::table)
         .values(&key)
         .on_conflict(keys::secret)
         .do_nothing()
-        .execute(conn)
+        .returning(DbKey::as_returning())
+        .get_result(conn)
         .await?;
-    Ok(rows_inserted)
+    Ok(key)
 }
 
 #[tracing::instrument(skip(conn))]

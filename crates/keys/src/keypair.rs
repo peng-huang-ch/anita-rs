@@ -1,30 +1,6 @@
-use strum::{Display, EnumCount, EnumDiscriminants, EnumString};
-use strum_macros::EnumIs;
+use r_storage::models::chain::Chain;
 
 use crate::solana::SolanaKeyPair;
-
-#[derive(
-    clap::ValueEnum,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    PartialEq,
-    EnumString,
-    Display,
-    EnumCount,
-    EnumDiscriminants,
-    EnumIs,
-)]
-pub enum Chain {
-    /// Docs on red
-    #[strum(to_string = "solana")]
-    SOLANA,
-    #[strum(serialize = "e", to_string = "eth")]
-    ETH,
-    #[strum(disabled)]
-    UNKNOWN,
-}
 
 /// Keypair interface.
 pub trait KeypairStrategy {
