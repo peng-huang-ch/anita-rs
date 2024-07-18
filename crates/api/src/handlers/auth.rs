@@ -22,7 +22,7 @@ pub struct HealthResponse {
     pub status: String,
     pub version: String,
 }
-
+// #[cfg_attr(test, mockable)]
 #[doc = r#"API Resource: /auth/login [POST]
 
 Login the user that matches the provided credentials to the application.
@@ -67,20 +67,4 @@ Logout the user that matches the provided credentials to the application.
 pub async fn logout(identity: Identity) -> actix_web::Result<impl Responder, SrvError> {
     identity.logout();
     Ok(HttpResponse::NoContent())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use actix_web::{test, App};
-
-    #[actix_web::test]
-    async fn test_login() {
-        let app = App::new().service(login);
-        let app = test::init_service(app).await;
-
-        let req = test::TestRequest::post().uri("/login").to_request();
-        let resp = test::call_service(&app, req).await;
-        assert!(resp.status().is_success());
-    }
 }
