@@ -1,10 +1,10 @@
 use actix_identity::Identity;
 use actix_web::HttpRequest;
-use actix_web::{http::StatusCode, web, HttpMessage, HttpResponse, Responder};
+use actix_web::{web, HttpMessage, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
 use r_storage::{
-    prelude::{hash::verify_password, users::get_user_by_email},
+    prelude::users::{get_auth_by_email, get_user_by_id},
     DbPool,
 };
 use r_tracing::tracing::instrument;
@@ -16,13 +16,6 @@ pub struct LoginRequest {
     pub email: String,
     pub password: String,
 }
-
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct HealthResponse {
-    pub status: String,
-    pub version: String,
-}
-// #[cfg_attr(test, mockable)]
 #[doc = r#"API Resource: /auth/login [POST]
 
 Login the user that matches the provided credentials to the application.
@@ -32,7 +25,7 @@ If successful, a cookie is set with the JWT token for the user. 200 Ok is return
 ErrorCode::AUTH / 400 Bad Request - Invalid email or password.
 ErrorCode::INTERNAL / 500 Bad Request - Any other error.
 "#]
-#[instrument(name = "auth login", skip(pool, body))]
+#[instrument(name = "login", skip(pool, body, request), fields(email = %body.email))]
 #[actix_web::post("/login")]
 pub async fn login(
     pool: web::Data<DbPool>,
@@ -40,20 +33,18 @@ pub async fn login(
     request: HttpRequest,
 ) -> actix_web::Result<impl Responder, SrvError> {
     let mut conn = pool.get().await?;
-    let body = body.into_inner();
-    let user = get_user_by_email(&mut conn, &body.email).await?.ok_or_else(|| {
-        SrvErrorKind::Custom(StatusCode::BAD_REQUEST, "Invalid email or password".to_string())
-    })?;
+    let auth = get_auth_by_email(&mut conn, &body.email)
+        .await?
+        .ok_or_else(|| SrvErrorKind::InvalidEmailOrPassword)?;
 
-    if !verify_password(body.password.as_str(), user.password.as_str()) {
-        return Err(SrvError::from(SrvErrorKind::Custom(
-            StatusCode::BAD_REQUEST,
-            "invalid email or password".to_string(),
-        )));
+    if !auth.verify_password(body.password.as_str()) {
+        return Err(SrvErrorKind::InvalidEmailOrPassword.into());
     }
 
+    let user = get_user_by_id(&mut conn, auth.id).await?;
+
     // Attached a verified user identity to the active session.
-    Identity::login(&request.extensions(), user.id.to_string()).unwrap();
+    Identity::login(&request.extensions(), auth.id.to_string())?;
     Ok(HttpResponse::Ok().json(user))
 }
 

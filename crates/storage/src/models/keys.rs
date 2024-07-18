@@ -15,7 +15,7 @@ pub struct DbKey {
     pub id: i32,
     #[serde(rename = "chain")]
     pub chain: String,
-    #[serde(rename = "secret")]
+    #[serde(skip_serializing, rename = "secret")]
     pub secret: String,
     #[serde(rename = "pubkey")]
     pub pubkey: String,
@@ -40,7 +40,7 @@ pub struct Key {
     pub secret: String,
     #[serde(rename = "pubkey")]
     pub pubkey: String,
-    #[serde(rename = "pubkey")]
+    #[serde(rename = "address")]
     pub address: String,
     #[serde(rename = "suffix")]
     pub suffix: String,

@@ -17,6 +17,15 @@ pub enum SrvErrorKind {
     IoError(#[from] std::io::Error),
 
     #[error("{0}")]
+    LoginError(#[from] actix_identity::error::LoginError),
+
+    #[error("{0}")]
+    IdentityError(#[from] actix_identity::error::GetIdentityError),
+
+    #[error("invalid email or password")]
+    InvalidEmailOrPassword,
+
+    #[error("{0}")]
     ValidationError(#[from] validator::ValidationErrors),
 
     #[error("the data for key {0} is not found")]
@@ -75,6 +84,7 @@ impl actix_web::error::ResponseError for SrvError {
     fn status_code(&self) -> StatusCode {
         match self.error_kind {
             SrvErrorKind::Custom(code, _) => code,
+            SrvErrorKind::InvalidEmailOrPassword => StatusCode::NOT_FOUND,
             SrvErrorKind::ValidationError(_) => StatusCode::BAD_REQUEST,
             SrvErrorKind::NotFound(_) => StatusCode::NOT_FOUND,
             SrvErrorKind::Any(_) => StatusCode::INTERNAL_SERVER_ERROR,

@@ -49,6 +49,7 @@ pub async fn init_api(port: u16, database_url: &str) -> std::io::Result<()> {
             // order of registration when it receives an incoming request.
             .wrap(session_mw)
             .service(handlers::health::get_health)
+            .service(handlers::key::get_suffix_key)
             .service(handlers::key::key_gen)
             .service(handlers::key::key_sign)
             .service(handlers::auth::login)

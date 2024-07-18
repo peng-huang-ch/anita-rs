@@ -24,7 +24,7 @@ pub struct SuffixKeyGenRequest {
 
 #[instrument(skip(pool, identity))]
 #[get("/suffix")]
-pub async fn get_key(
+pub async fn get_suffix_key(
     pool: web::Data<DbPool>,
     query: web::Query<SuffixKeyGenRequest>,
     identity: Identity,
@@ -36,7 +36,7 @@ pub async fn get_key(
     let key = get_key_by_suffix(&mut conn, chain, suffix).await?;
 
     if let Some(ref key) = key {
-        info!("{:?} use the key {:?}", identity.id(), key.id);
+        info!("{:?} use the key {:?}", identity.id()?, key.id);
     }
 
     Ok(HttpResponse::Ok().json(key))
