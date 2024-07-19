@@ -1,16 +1,54 @@
+/// Common error handling for the application.
+///
+/// This module defines the common error types and handling mechanisms used throughout the application.
+/// It provides a unified way to manage and propagate errors, making the code more maintainable and easier to debug.
+///
+/// ## Inspiration
+///
+/// This error handling approach was inspired by the following project:
+/// - [LemmyNet/lemmy](https://github.com/LemmyNet/lemmy/blob/main/crates/utils/src/error.rs)
+///
+/// ## Usage
+///
+/// The main error type `SrvError` is used to represent all possible errors in the application.
+/// You can use the `From` trait to convert from other error types into `SrvError`.
+///
+/// ```rust
+/// use thiserror::Error;
+///
+/// #[derive(Error, Debug)]
+/// pub enum SrvError {
+///     #[error("An I/O error occurred: {0}")]
+///     Io(#[from] std::io::Error),
+///     #[error("A parsing error occurred: {0}")]
+///     Parse(#[from] std::num::ParseIntError),
+///
+///     #[error("An unknown error occurred")]
+///     Unknown,
+/// }
+///
+/// // Example function that returns an SrvError
+/// fn example_function() -> Result<(), SrvError> {
+///     // Some code that may produce an I/O error
+///     let _file = std::fs::File::open("non_existent_file.txt")?;
+///
+///     Ok(())
+/// }
+/// ```
 use actix_web::{error::BlockingError, http::StatusCode};
-use serde_json::json;
-use std::fmt;
-use tracing_error::SpanTrace;
+use std::{
+    fmt,
+    fmt::{Debug, Display},
+};
 
 use r_storage::{DbError, DbRunError};
+use r_tracing::SpanTrace;
 
-#[allow(dead_code)]
 pub type SrvResult<T> = Result<T, SrvError>;
 
 // https://docs.rs/tracing-error/latest/tracing_error/
-#[allow(dead_code)]
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum SrvErrorKind {
     #[error("{0}")]
     IoError(#[from] std::io::Error),
@@ -31,7 +69,7 @@ pub enum SrvErrorKind {
     NotFound(String),
 
     #[error("{1}")]
-    Custom(StatusCode, String),
+    Http(StatusCode, String),
 
     #[error("{0}")]
     Any(#[from] anyhow::Error),
@@ -51,7 +89,7 @@ pub struct SrvError {
     pub inner: anyhow::Error,
 }
 
-impl fmt::Display for SrvError {
+impl Display for SrvError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}: ", &self.error_kind)?;
         // print anyhow including trace
@@ -60,7 +98,7 @@ impl fmt::Display for SrvError {
         // and if RUST_BACKTRACE=1, also a full backtrace
         writeln!(f, "{:?}", self.inner)?;
         // writeln!(f, "source {:?}", self.inner.backtrace())?;
-        // print the tracing span trace
+        // print the tracing span trace.
         fmt::Display::fmt(&self.context, f)
     }
 }
@@ -76,30 +114,5 @@ where
             error_kind: into,
             context: SpanTrace::capture(),
         }
-    }
-}
-
-impl actix_web::error::ResponseError for SrvError {
-    fn status_code(&self) -> StatusCode {
-        match self.error_kind {
-            SrvErrorKind::Custom(code, _) => code,
-            SrvErrorKind::InvalidEmailOrPassword => StatusCode::BAD_REQUEST,
-            SrvErrorKind::ValidationError(_) => StatusCode::BAD_REQUEST,
-            SrvErrorKind::NotFound(_) => StatusCode::NOT_FOUND,
-            SrvErrorKind::Any(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            SrvErrorKind::IoError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    }
-
-    fn error_response(&self) -> actix_web::HttpResponse {
-        let status_code = self.status_code();
-        let error_response = json!({
-            "success": false,
-            "code": status_code.as_u16(),
-            "error": status_code.canonical_reason().unwrap_or("Unknown").to_string(),
-            "message": self.error_kind.to_string(),
-        });
-        actix_web::HttpResponse::build(self.status_code()).json(error_response)
     }
 }

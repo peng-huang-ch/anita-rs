@@ -76,15 +76,14 @@ impl Command {
 
         match self.command {
             Subcommands::Gen => {
-                let key = key_gen(&client, &base, chain.as_str()).await.expect("failed to gen key");
+                let key = key_gen(&client, &base, chain.as_str()).await?;
                 println!("keygen: {:?}", key.to_string());
             }
             Subcommands::Sign { pubkey, message, .. } => {
                 let message = message;
                 let data =
                     key_sign(&client, &base, chain.as_str(), pubkey.as_str(), message.as_str())
-                        .await
-                        .expect("failed to sign key");
+                        .await?;
                 println!("signature: {:?}", data.to_string());
             }
         }

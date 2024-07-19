@@ -20,7 +20,7 @@ use crate::{KeypairContext, Keypairs};
 /// let keypair = keygen(num_threads, target_suffix, Chain::SOLANA);
 /// assert!(keypair.pubkey.ends_with(target_suffix));
 /// ```
-pub fn keygen(num_threads: u32, target_suffix: &str, chain: Chain) -> Keypairs {
+pub fn keygen(num_threads: u8, target_suffix: &str, chain: Chain) -> Keypairs {
     info!(
         "Searching for addresses ending with {} and using {} threads",
         target_suffix, num_threads

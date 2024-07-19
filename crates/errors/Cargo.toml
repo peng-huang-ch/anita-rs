@@ -1,0 +1,25 @@
+[package]
+name = "r-errors"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+
+[dependencies]
+
+# misc
+thiserror.workspace = true
+anyhow.workspace = true
+serde_json.workspace = true
+validator.workspace = true
+
+actix-web = { workspace = true }
+actix-identity = { workspace = true }
+
+r-storage = { path = "../storage" }
+r-tracing = { path = "../tracing" }
+
+[features]
+default = []
+actix = []

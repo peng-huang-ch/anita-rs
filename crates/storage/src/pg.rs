@@ -13,6 +13,7 @@ pub type DbConnectionManger = AsyncDieselConnectionManager<AsyncPgConnection>;
 pub type DbConnection<'a> = PooledConnection<'a, AsyncPgConnection>;
 pub type DbRunError = RunError;
 pub type DbError = diesel::result::Error;
+#[allow(dead_code)]
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 #[tracing::instrument(skip(database_url))]

@@ -16,7 +16,6 @@ actix-utils = "3"
 
 bs58 = "0.5.1"
 
-thiserror = "1.0.43"
 dotenvy = "0.15.7"
 
 serde = { workspace = true, features = ["derive"] }
@@ -26,6 +25,7 @@ serde_json = { workspace = true }
 r-storage = { path = "../storage" }
 r-tracing = { path = "../tracing" }
 r-keys = { path = "../keys" }
+r-errors = { path = "../errors", features = ["actix"] }
 
 # opentelemetry
 opentelemetry = { version = "0.20.0", features = [
@@ -38,13 +38,11 @@ opentelemetry-jaeger = { version = "0.19.0", features = [
 ] }
 
 # tracing
-tracing = "0.1.37"
+# tracing = "0.1.37" # use the workspace version
+# tracing-error = "0.2.0" # use the workspace version
 tracing-actix-web = "0.7.5"
 tracing-bunyan-formatter = "0.3.8"
-tracing-error = "0.2.0"
 
-# validator
-validator = "0.18.1"
 
 tokio = { version = "1.29.0", features = ["full"] }
 actix-web-opentelemetry = { version = "0.18.0", features = ["metrics"] }

@@ -336,7 +336,6 @@ dependencies = [
 name = "anita"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "chrono",
  "clap",
  "dotenvy",
@@ -2877,18 +2876,29 @@ dependencies = [
  "dotenvy",
  "opentelemetry 0.20.0",
  "opentelemetry-jaeger 0.19.0",
+ "r-errors",
  "r-keys",
  "r-storage",
  "r-tracing",
  "reqwest",
  "serde",
  "serde_json",
- "thiserror",
  "tokio",
- "tracing",
  "tracing-actix-web",
  "tracing-bunyan-formatter",
- "tracing-error",
+]
+
+[[package]]
+name = "r-errors"
+version = "0.1.0"
+dependencies = [
+ "actix-identity",
+ "actix-web",
+ "anyhow",
+ "r-storage",
+ "r-tracing",
+ "serde_json",
+ "thiserror",
  "validator",
 ]
 

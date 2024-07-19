@@ -2,16 +2,18 @@ use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie::Key, web, App, HttpServer};
 use actix_web_opentelemetry::{RequestMetrics, RequestTracing};
+
 use shutdown::shutdown;
 use std::time::Duration;
 use tokio::sync::oneshot;
-use tracing::{debug, warn};
 use tracing_actix_web::TracingLogger;
 
-pub use errors::{SrvError, SrvErrorKind};
+// re-export the dependencies
+pub use r_errors::{SrvError, SrvErrorKind};
 pub use r_storage::init_db;
+pub use r_tracing::tracing;
+pub use r_tracing::tracing::{debug, error, info, warn};
 
-mod errors;
 mod handlers;
 // mod middlewares;
 mod shutdown;

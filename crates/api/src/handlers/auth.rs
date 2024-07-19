@@ -7,9 +7,8 @@ use r_storage::{
     prelude::users::{get_auth_by_email, get_user_by_id},
     DbPool,
 };
-use r_tracing::tracing::instrument;
 
-use crate::errors::{SrvError, SrvErrorKind};
+use crate::{tracing, SrvError, SrvErrorKind};
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct LoginRequest {
@@ -25,7 +24,7 @@ If successful, a cookie is set with the JWT token for the user. 200 Ok is return
 ErrorCode::AUTH / 400 Bad Request - invalid email or password.
 ErrorCode::INTERNAL / 500 Bad Request - any other error.
 "#]
-#[instrument(name = "login", skip(pool, body, request), fields(email = %body.email))]
+#[tracing::instrument(name = "login", skip(pool, body, request), fields(email = %body.email))]
 #[actix_web::post("/login")]
 pub async fn login(
     pool: web::Data<DbPool>,
@@ -38,7 +37,7 @@ pub async fn login(
         .ok_or_else(|| SrvErrorKind::InvalidEmailOrPassword)?;
 
     if !auth.verify_password(body.password.as_str()) {
-        return Err(SrvErrorKind::InvalidEmailOrPassword.into());
+        Err(SrvErrorKind::InvalidEmailOrPassword)?
     }
 
     let user = get_user_by_id(&mut conn, auth.id).await?;
@@ -53,7 +52,7 @@ pub async fn login(
 Logout the user that matches the provided credentials to the application.
 
 "#]
-#[tracing::instrument(name = "auth logout", skip(identity))]
+#[tracing::instrument(name = "logout", skip(identity))]
 #[actix_web::post("/logout")]
 pub async fn logout(identity: Identity) -> actix_web::Result<impl Responder, SrvError> {
     identity.logout();

@@ -6,16 +6,16 @@ use serde::{Deserialize, Serialize};
 
 use r_keys::KeypairContext;
 use r_storage::{
-    models::{
+    prelude::{
         chain::Chain,
         keys::{create_key, get_key_by_suffix, get_secret_by_pubkey, NewKey},
         users::get_user_by_id,
     },
     DbPool,
 };
-use r_tracing::tracing::{info, instrument};
+use r_tracing::tracing;
 
-use crate::errors::{SrvError, SrvErrorKind};
+use crate::{info, SrvError, SrvErrorKind};
 
 #[derive(Debug, Deserialize)]
 pub struct SuffixKeyGenRequest {
@@ -23,7 +23,7 @@ pub struct SuffixKeyGenRequest {
     suffix: String,
 }
 
-#[instrument(skip(pool, identity))]
+#[tracing::instrument(skip(pool, identity))]
 #[get("/suffix")]
 pub async fn get_suffix_key(
     pool: web::Data<DbPool>,
@@ -48,7 +48,7 @@ pub struct KeyGenRequest {
     chain: Chain,
 }
 
-#[instrument(skip(pool, identity))]
+#[tracing::instrument(skip(pool, identity))]
 #[get("/{id}")]
 pub async fn get_key(
     pool: web::Data<DbPool>,
@@ -64,7 +64,7 @@ pub async fn get_key(
     Ok(HttpResponse::Ok().json(key))
 }
 
-#[instrument(skip(pool, identity))]
+#[tracing::instrument(skip(pool, identity))]
 #[post("/gen")]
 pub async fn key_gen(
     pool: web::Data<DbPool>,
@@ -96,7 +96,7 @@ pub struct KeySignResponse {
     pubkey: String,
 }
 
-#[instrument(skip(pool, identity))]
+#[tracing::instrument(skip(pool, identity))]
 #[post("/sign")]
 pub async fn key_sign(
     identity: Identity,
@@ -106,12 +106,11 @@ pub async fn key_sign(
     let _identity = identity;
     let body = body.into_inner();
 
-    let key =
-        get_secret_by_pubkey(&mut pool.get().await?, body.chain, body.pubkey).await?.ok_or_else(
-            || SrvErrorKind::Custom(StatusCode::BAD_REQUEST, "Key not found".to_string()),
-        )?;
+    let key = get_secret_by_pubkey(&mut pool.get().await?, body.chain, body.pubkey)
+        .await?
+        .ok_or_else(|| SrvErrorKind::Http(StatusCode::BAD_REQUEST, "Key not found".to_string()))?;
     let chain = Chain::from_str(&key.key.chain)
-        .map_err(|e| SrvErrorKind::Custom(StatusCode::BAD_REQUEST, e.to_string()))?;
+        .map_err(|e| SrvErrorKind::Http(StatusCode::BAD_REQUEST, e.to_string()))?;
 
     let context = KeypairContext::from_chain(chain);
 

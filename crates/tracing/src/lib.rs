@@ -4,8 +4,10 @@ use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{
     filter::EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt, Layer,
 };
+
 // Re-export tracing crates
 pub use tracing;
+pub use tracing_error::SpanTrace;
 pub use tracing_subscriber;
 
 /// A boxed tracing [Layer].

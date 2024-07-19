@@ -1,7 +1,7 @@
 use std::future::Future;
-
 use tokio::signal;
-use tracing::info;
+
+use crate::info;
 
 pub async fn shutdown<F, R>(fut: F)
 where

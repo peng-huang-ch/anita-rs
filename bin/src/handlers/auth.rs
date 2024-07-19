@@ -1,15 +1,10 @@
-use anyhow::anyhow;
+use eyre::{anyhow, Result};
 use reqwest::Client;
 use reqwest::Url;
 use serde_json::json;
 
 /// Login to the get a session
-pub async fn login(
-    client: &Client,
-    base: &Url,
-    email: String,
-    password: String,
-) -> Result<(), anyhow::Error> {
+pub async fn login(client: &Client, base: &Url, email: String, password: String) -> Result<()> {
     let url = base.join("/auth/login")?;
     let resp = client
         .post(url)
@@ -29,7 +24,7 @@ pub async fn login(
 }
 
 /// Logout to the close the session
-pub async fn logout(client: &Client, base: &Url) -> Result<(), anyhow::Error> {
+pub async fn logout(client: &Client, base: &Url) -> Result<()> {
     let url = base.join("/auth/logout")?;
     let resp = client.post(url).send().await?;
     if resp.status().is_client_error() {
@@ -39,11 +34,7 @@ pub async fn logout(client: &Client, base: &Url) -> Result<(), anyhow::Error> {
 }
 
 /// Generate a key with chain
-pub async fn key_gen(
-    client: &Client,
-    base: &Url,
-    chain: &str,
-) -> Result<serde_json::Value, anyhow::Error> {
+pub async fn key_gen(client: &Client, base: &Url, chain: &str) -> Result<serde_json::Value> {
     let url = base.join("/keys/gen")?;
     let resp = client
         .post(url)
@@ -67,7 +58,7 @@ pub async fn key_sign(
     chain: &str,
     pubkey: &str,
     message: &str,
-) -> Result<serde_json::Value, anyhow::Error> {
+) -> Result<serde_json::Value> {
     let url = base.join("keys/sign")?;
     let resp = client
         .post(url)
@@ -88,7 +79,6 @@ pub async fn key_sign(
 mod tests {
     use super::*;
 
-    use anyhow::Ok;
     use r_keys::Chain;
     use reqwest::cookie::Jar;
     use reqwest::Client;
@@ -105,7 +95,7 @@ mod tests {
 
     #[ignore]
     #[tokio::test]
-    async fn test_login() -> anyhow::Result<()> {
+    async fn test_login() -> eyre::Result<()> {
         dotenvy::dotenv().ok();
         let cookie_jar = Arc::new(Jar::default());
         let client = Client::builder()
@@ -126,7 +116,7 @@ mod tests {
 
     #[ignore]
     #[tokio::test]
-    async fn test_key_gen() -> anyhow::Result<()> {
+    async fn test_key_gen() -> eyre::Result<()> {
         dotenvy::dotenv().ok();
         let cookie_jar = Arc::new(Jar::default());
         let client = Client::builder()
@@ -148,7 +138,7 @@ mod tests {
 
     #[ignore]
     #[tokio::test]
-    async fn test_key_sign() -> anyhow::Result<()> {
+    async fn test_key_sign() -> eyre::Result<()> {
         dotenvy::dotenv().ok();
 
         let cookie_jar = Arc::new(Jar::default());

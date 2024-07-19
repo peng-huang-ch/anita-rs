@@ -2,6 +2,7 @@
 members = [
 	"bin",
 	"crates/api",     # svc api
+	"crates/errors",  # svc errors
 	"crates/keys",    # svc manager
 	"crates/storage", # svc storage
 	"crates/tracing", # svc tracing
@@ -21,12 +22,21 @@ license = "MIT OR Apache-2.0"
 anyhow = "1.0.72"
 argon2 = "0.5"
 dotenvy = "0.15.7"
+thiserror = "1.0.43"
 tracing = "0.1.0"
 chrono = { version = "0.4.38", features = ["serde"] }
 rayon = "1.10"
 
 clap = { version = "4", features = ["derive"] }
 eyre = "0.6.12"
+
+
+# validator
+validator = "0.18.1"
+
+# actix
+actix-web = { version = "4.8.0" }
+actix-identity = "0.7"
 
 # async
 futures = "0.3"

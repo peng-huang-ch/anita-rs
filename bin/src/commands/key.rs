@@ -62,7 +62,7 @@ impl Command {
                 println!("key: {:?}", key);
             }
             Subcommands::New { count, .. } => {
-                let pairs = keygen(count.into(), suffix.as_str(), chain);
+                let pairs = keygen(count, suffix.as_str(), chain);
                 let mut conn = pool.get().await?;
                 let key = NewKey {
                     chain: pairs.chain.to_string(),
