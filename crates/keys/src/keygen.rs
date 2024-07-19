@@ -14,10 +14,10 @@ use crate::{KeypairContext, Keypairs};
 /// # Examples
 ///
 /// ```
-/// use r_keys::{KeypairContext, Keypairs};
+/// use r_keys::{Chain, KeypairContext, Keypairs, keygen::keygen};
 /// let num_threads = 4;
 /// let target_suffix = "p";
-/// let keypair = keygen(num_threads, target_su ffix, Chain::SOLANA);
+/// let keypair = keygen(num_threads, target_suffix, Chain::SOLANA);
 /// assert!(keypair.pubkey.ends_with(target_suffix));
 /// ```
 pub fn keygen(num_threads: u32, target_suffix: &str, chain: Chain) -> Keypairs {

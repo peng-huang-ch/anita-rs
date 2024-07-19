@@ -156,12 +156,14 @@ pub async fn create_keys<'a>(
 }
 
 #[instrument(skip(conn))]
-pub async fn get_secret_by_id(
+pub async fn get_secret_by_pubkey(
     conn: &mut DbConnection<'_>,
-    id: i32,
+    chain: Chain,
+    pubkey: String,
 ) -> Result<Option<KeyWithSecret>, DbError> {
-    let key = keys::table
-        .filter(keys::id.eq(id))
+    let key: Option<KeyWithSecret> = keys::table
+        .filter(keys::chain.eq(chain.to_string()))
+        .filter(keys::pubkey.eq(pubkey))
         .select(KeyWithSecret::as_select())
         .first::<KeyWithSecret>(conn)
         .await

@@ -8,7 +8,8 @@ use tokio::sync::oneshot;
 use tracing::{debug, warn};
 use tracing_actix_web::TracingLogger;
 
-use r_storage::init_db;
+pub use errors::{SrvError, SrvErrorKind};
+pub use r_storage::init_db;
 
 mod errors;
 mod handlers;

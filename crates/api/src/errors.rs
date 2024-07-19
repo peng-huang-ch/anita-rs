@@ -1,7 +1,6 @@
-// https://github.com/LemmyNet/lemmy/blob/main/crates/utils/src/error.rs#L73
 use actix_web::{error::BlockingError, http::StatusCode};
 use serde_json::json;
-use std::fmt::{Debug, Display};
+use std::fmt;
 use tracing_error::SpanTrace;
 
 use r_storage::{DbError, DbRunError};
@@ -47,13 +46,13 @@ pub enum SrvErrorKind {
 
 #[derive(Debug)]
 pub struct SrvError {
+    pub context: SpanTrace,
     pub error_kind: SrvErrorKind,
     pub inner: anyhow::Error,
-    pub context: SpanTrace,
 }
 
-impl Display for SrvError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for SrvError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}: ", &self.error_kind)?;
         // print anyhow including trace
         // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
@@ -62,7 +61,7 @@ impl Display for SrvError {
         writeln!(f, "{:?}", self.inner)?;
         // writeln!(f, "source {:?}", self.inner.backtrace())?;
         // print the tracing span trace
-        std::fmt::Display::fmt(&self.context, f)
+        fmt::Display::fmt(&self.context, f)
     }
 }
 
@@ -84,7 +83,7 @@ impl actix_web::error::ResponseError for SrvError {
     fn status_code(&self) -> StatusCode {
         match self.error_kind {
             SrvErrorKind::Custom(code, _) => code,
-            SrvErrorKind::InvalidEmailOrPassword => StatusCode::NOT_FOUND,
+            SrvErrorKind::InvalidEmailOrPassword => StatusCode::BAD_REQUEST,
             SrvErrorKind::ValidationError(_) => StatusCode::BAD_REQUEST,
             SrvErrorKind::NotFound(_) => StatusCode::NOT_FOUND,
             SrvErrorKind::Any(_) => StatusCode::INTERNAL_SERVER_ERROR,

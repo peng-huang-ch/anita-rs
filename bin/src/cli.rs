@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 
 use r_tracing::init_logging;
 
-use crate::commands::{api, db, key};
+use crate::commands::{api, db, key, manager};
 #[derive(Parser)]
 #[clap(version, about)]
 #[clap(propagate_version = true)]
@@ -26,11 +26,14 @@ pub enum Commands {
     #[command(name = "api", about = "Start the API server")]
     Api(api::Command),
 
-    #[command(name = "key", about = "Manage the keypairs")]
-    Key(key::Command),
-
     #[command(name = "db", about = "Database tools")]
     DB(db::Command),
+
+    #[command(name = "key", about = "Manage the keypairs with the database")]
+    Key(key::Command),
+
+    #[command(name = "manager", about = "Manager the keypairs with the http request")]
+    Manager(manager::Command),
 }
 
 /// Parse CLI options, set up logging and run the chosen command.
@@ -45,6 +48,7 @@ pub async fn run() -> eyre::Result<()> {
         Commands::Api(command) => command.execute().await?,
         Commands::DB(command) => command.execute().await?,
         Commands::Key(command) => command.execute().await?,
+        Commands::Manager(command) => command.execute().await?,
     };
     drop(guard);
     Ok(())

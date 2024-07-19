@@ -8,7 +8,7 @@ use r_keys::KeypairContext;
 use r_storage::{
     models::{
         chain::Chain,
-        keys::{create_key, get_key_by_suffix, get_secret_by_id, NewKey},
+        keys::{create_key, get_key_by_suffix, get_secret_by_pubkey, NewKey},
         users::get_user_by_id,
     },
     DbPool,
@@ -82,9 +82,10 @@ pub async fn key_gen(
     Ok(HttpResponse::Ok().json(saved))
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize)]
 pub struct KeySignRequest {
-    id: i32,
+    chain: Chain,
+    pubkey: String,
     message: String,
 }
 
@@ -105,11 +106,12 @@ pub async fn key_sign(
     let _identity = identity;
     let body = body.into_inner();
 
-    let key = get_secret_by_id(&mut pool.get().await?, body.id).await?.ok_or_else(|| {
-        SrvErrorKind::Custom(StatusCode::BAD_REQUEST, "Key not found".to_string())
-    })?;
+    let key =
+        get_secret_by_pubkey(&mut pool.get().await?, body.chain, body.pubkey).await?.ok_or_else(
+            || SrvErrorKind::Custom(StatusCode::BAD_REQUEST, "Key not found".to_string()),
+        )?;
     let chain = Chain::from_str(&key.key.chain)
-        .map_err(|_| SrvErrorKind::Custom(StatusCode::BAD_REQUEST, "Invalid chain".to_string()))?;
+        .map_err(|e| SrvErrorKind::Custom(StatusCode::BAD_REQUEST, e.to_string()))?;
 
     let context = KeypairContext::from_chain(chain);
 
