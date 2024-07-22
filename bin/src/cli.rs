@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 
 use r_tracing::init_logging;
 
-use crate::commands::{api, db, interact, key, manager};
+use crate::commands::{api, db, interact, key, manage};
 #[derive(Parser)]
 #[clap(version, about)]
 #[clap(propagate_version = true)]
@@ -29,13 +29,13 @@ pub enum Commands {
     #[command(name = "db", about = "Database tools")]
     DB(db::Command),
 
-    #[command(name = "key", about = "Manage the keypairs with the database")]
+    #[command(name = "key", about = "Manage keypairs through the Database")]
     Key(key::Command),
 
-    #[command(name = "manager", about = "Manager the keypairs with the http request")]
-    Manager(manager::Command),
+    #[command(name = "manage", about = "Manage keypairs through HTTP requests")]
+    Manage(manage::Command),
 
-    #[command(name = "interact", about = "Manager the keypairs with the http request")]
+    #[command(name = "interact", about = "Interactively manage keypairs through HTTP request")]
     Interact(interact::Command),
 }
 
@@ -51,7 +51,7 @@ pub async fn run() -> eyre::Result<()> {
         Commands::Api(command) => command.execute().await?,
         Commands::DB(command) => command.execute().await?,
         Commands::Key(command) => command.execute().await?,
-        Commands::Manager(command) => command.execute().await?,
+        Commands::Manage(command) => command.execute().await?,
         Commands::Interact(command) => command.execute().await?,
     };
     drop(guard);

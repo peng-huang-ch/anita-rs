@@ -8,6 +8,7 @@ license.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+aes-gcm = { version = "0.10.3" }
 argon2 = { workspace = true }
 clap = { workspace = true }
 tracing = { workspace = true }
@@ -31,6 +32,10 @@ diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = '74
 	"async-connection-wrapper",
 ] }
 diesel_migrations = { version = "2.2.0" }
+
+hex = "0.4.1"
+rand = "0.8.5"
+openssl = "0.10.52"
 
 [dev-dependencies]
 dotenvy = "0.15.7"

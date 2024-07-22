@@ -1,6 +1,3 @@
-// pub mod book;
-// pub mod database;
-
 pub use diesel;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations};
 
