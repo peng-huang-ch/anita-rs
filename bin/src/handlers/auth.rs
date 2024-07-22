@@ -13,11 +13,14 @@ pub async fn login(client: &Client, base: &Url, email: String, password: String)
             "password": password,
         }))
         .send()
-        .await
-        .map_err(|_e| anyhow!("failed to build clint, please check you host"))?;
+        .await?;
 
-    if !resp.status().is_success() {
+    if resp.status().is_client_error() {
         return Err(anyhow!("please check you email or password"));
+    }
+
+    if resp.status().is_server_error() {
+        return Err(anyhow!("remote server is not available"));
     }
 
     Ok(())
@@ -28,7 +31,11 @@ pub async fn logout(client: &Client, base: &Url) -> Result<()> {
     let url = base.join("/auth/logout")?;
     let resp = client.post(url).send().await?;
     if resp.status().is_client_error() {
-        eprintln!("Failed to login: {:?}", resp);
+        eprintln!("failed to logout: {:?}", resp);
+    }
+
+    if resp.status().is_server_error() {
+        return Err(anyhow!("remote server is not available"));
     }
     Ok(())
 }
@@ -44,7 +51,11 @@ pub async fn key_gen(client: &Client, base: &Url, chain: &str) -> Result<serde_j
         .map_err(|_e| anyhow!("failed to build clint, please check you host"))?;
 
     if resp.status().is_client_error() {
-        eprintln!("failed to gen key: {:?}", resp);
+        return Err(anyhow!("failed to gen key: {:?}", resp.text().await?));
+    }
+
+    if resp.status().is_server_error() {
+        return Err(anyhow!("remote server is not available"));
     }
 
     let data = resp.json::<serde_json::Value>().await?;
@@ -68,7 +79,11 @@ pub async fn key_sign(
         .map_err(|_e| anyhow!("failed to build clint, please check you host"))?;
 
     if resp.status().is_client_error() {
-        eprintln!("failed to gen key: {:?}", resp);
+        return Err(anyhow!("failed to sign key: {:?}", resp.text().await?));
+    }
+
+    if resp.status().is_server_error() {
+        return Err(anyhow!("remote server is not available"));
     }
 
     let data = resp.json::<serde_json::Value>().await?;

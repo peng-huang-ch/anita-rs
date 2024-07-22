@@ -14,8 +14,8 @@ pub struct Command {
     #[clap(short, long, value_enum, default_value_t = Chain::SOLANA)]
     chain: Chain,
 
-    /// The database to save the keys.
-    #[arg(long, value_name = "host", env("HOST"))]
+    /// The remote server host
+    #[arg(long, value_name = "server host", env("KM"))]
     host: String,
 
     /// Login Email
