@@ -21,12 +21,17 @@ reqwest = { workspace = true, features = ["cookies", "json"] }
 
 clap = { workspace = true, features = ["derive", "env"] }
 
-r-api = { path = "../crates/api" }
-r-keys = { path = "../crates/keys" }
-r-storage = { path = "../crates/storage" }
+r-api = { path = "../crates/api", optional = true }
+r-keys = { path = "../crates/keys", optional = true }
+r-storage = { path = "../crates/storage", optional = true }
 r-tracing = { path = "../crates/tracing" }
 
 dialoguer = "0.11.0"
 
 [build-dependencies]
 vergen = { version = "8.3.2", features = ["build", "cargo", "git", "gitcl"] }
+
+[features]
+default = ["api", "interact"]
+api = ["r-api", "r-keys", "r-storage"]
+interact = []

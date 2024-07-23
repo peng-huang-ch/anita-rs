@@ -2,10 +2,14 @@ use clap::{Parser, Subcommand};
 
 use r_tracing::init_logging;
 
-use crate::commands::{api, db, interact, key, manage};
+#[cfg(feature = "interact")]
+use crate::commands::interact;
+
+#[cfg(feature = "api")]
+use crate::commands::{api, db, key, manage};
+
 #[derive(Parser)]
-#[clap(version, about)]
-#[clap(propagate_version = true)]
+#[clap(version, about, propagate_version = true)]
 pub struct Cli {
     #[clap(subcommand)]
     command: Commands,
@@ -23,18 +27,19 @@ impl Cli {
 /// See `anita --help` for more information.
 #[derive(Debug, Subcommand)]
 pub enum Commands {
+    #[cfg(feature = "api")]
     #[command(name = "api", about = "Start the API server")]
     Api(api::Command),
-
+    #[cfg(feature = "api")]
     #[command(name = "db", about = "Database tools")]
-    DB(db::Command),
-
+    Db(db::Command),
+    #[cfg(feature = "api")]
     #[command(name = "key", about = "Manage keypairs through the Database")]
     Key(key::Command),
-
+    #[cfg(feature = "api")]
     #[command(name = "manage", about = "Manage keypairs through HTTP requests")]
     Manage(manage::Command),
-
+    #[cfg(feature = "interact")]
     #[command(name = "interact", about = "Interactively manage keypairs through HTTP request")]
     Interact(interact::Command),
 }
@@ -48,12 +53,17 @@ pub async fn run() -> eyre::Result<()> {
     let guard = init_logging(server, level);
 
     match opt.command {
+        #[cfg(feature = "api")]
         Commands::Api(command) => command.execute().await?,
-        Commands::DB(command) => command.execute().await?,
+        #[cfg(feature = "api")]
+        Commands::Db(command) => command.execute().await?,
+        #[cfg(feature = "api")]
         Commands::Key(command) => command.execute().await?,
+        #[cfg(feature = "api")]
         Commands::Manage(command) => command.execute().await?,
+        #[cfg(feature = "interact")]
         Commands::Interact(command) => command.execute().await?,
-    };
+    }
     drop(guard);
     Ok(())
 }
@@ -81,9 +91,4 @@ mod tests {
             assert_eq!(err.kind(), clap::error::ErrorKind::DisplayHelp);
         }
     }
-
-    // #[test]
-    // fn test_key_vanity() {
-    //     let _ = Cli::try_parse_from(["key", "vanity", "-s", "p"]).unwrap();
-    // }
 }
