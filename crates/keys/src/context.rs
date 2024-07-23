@@ -1,6 +1,7 @@
 use crate::SolanaKeyPair;
 use crate::{Chain, KeypairStrategy, Keypairs};
 
+/// A context for generating and signing keypairs.
 pub struct KeypairContext {
     pub strategy: Box<dyn KeypairStrategy>,
     pub chain: Chain,
@@ -11,8 +12,8 @@ impl KeypairContext {
     /// Create a new keypair context.
     pub fn from_chain(chain: Chain) -> Self {
         let strategy: Box<dyn KeypairStrategy> = match chain {
-            Chain::SOLANA => Box::new(SolanaKeyPair),
-            _ => Box::new(SolanaKeyPair),
+            Chain::SOLANA => Box::new(SolanaKeyPair::new()),
+            _ => Box::new(SolanaKeyPair::new()),
         };
         KeypairContext { strategy, chain }
     }

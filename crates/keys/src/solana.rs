@@ -5,6 +5,19 @@ use crate::{Chain, KeypairStrategy, Keypairs};
 
 pub struct SolanaKeyPair;
 
+impl SolanaKeyPair {
+    pub fn new() -> Self {
+        SolanaKeyPair
+    }
+
+    pub fn to_keypairs(keypair: Keypair) -> Keypairs {
+        let secret = keypair.to_base58_string();
+        let pubkey = keypair.pubkey();
+        let address = bs58::encode(pubkey).into_string();
+        Keypairs { chain: Chain::SOLANA, secret, pubkey: address.clone(), address }
+    }
+}
+
 impl KeypairStrategy for SolanaKeyPair {
     fn chain(&self) -> Chain {
         Chain::SOLANA
@@ -12,18 +25,12 @@ impl KeypairStrategy for SolanaKeyPair {
 
     fn generate_keypair(&self) -> Keypairs {
         let keypair = Keypair::new();
-        let secret = keypair.to_base58_string();
-        let pubkey = keypair.pubkey();
-        let address = bs58::encode(pubkey).into_string();
-        Keypairs { chain: self.chain(), secret, pubkey: address.clone(), address }
+        Self::to_keypairs(keypair)
     }
 
     fn from_secret(&self, secret: &str) -> Keypairs {
         let keypair = Keypair::from_base58_string(secret);
-        let secret = keypair.to_base58_string();
-        let pubkey = keypair.pubkey();
-        let address = bs58::encode(pubkey).into_string();
-        Keypairs { chain: self.chain(), secret, pubkey: address.clone(), address }
+        Self::to_keypairs(keypair)
     }
 
     fn sign(&self, secret: &str, message: &[u8]) -> String {
