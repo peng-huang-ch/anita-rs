@@ -13,7 +13,14 @@ use r_storage::{
 #[command(version, about, long_about = None)]
 pub struct Command {
     /// The database to save the keys.
-    #[arg(short, long, value_name = "database_url", env("DATABASE_URL"))]
+    #[arg(
+        short,
+        long,
+        value_name = "database_url",
+        env("DATABASE_URL"),
+        hide_env_values = true,
+        required = true
+    )]
     database_url: String,
 
     /// The chain to use
