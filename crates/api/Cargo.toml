@@ -22,10 +22,10 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
 # internal
-r-storage = { path = "../storage" }
-r-tracing = { path = "../tracing" }
-r-keys = { path = "../keys" }
-r-errors = { path = "../errors", features = ["actix"] }
+r-storage = { workspace = true }
+r-tracing = { workspace = true }
+r-keys = { workspace = true }
+r-errors = { workspace = true, features = ["actix"] }
 
 # opentelemetry
 opentelemetry = { version = "0.20.0", features = [

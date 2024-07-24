@@ -17,8 +17,8 @@ validator.workspace = true
 actix-web = { workspace = true }
 actix-identity = { workspace = true }
 
-r-storage = { path = "../storage" }
-r-tracing = { path = "../tracing" }
+r-storage = { workspace = true }
+r-tracing = { workspace = true }
 
 [features]
 default = []

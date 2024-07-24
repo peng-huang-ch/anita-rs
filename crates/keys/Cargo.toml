@@ -15,8 +15,8 @@ clap = { workspace = true }
 strum = { workspace = true, features = ["derive"] }
 strum_macros = { workspace = true }
 
-r-storage = { path = "../storage" }
-r-tracing = { path = "../tracing" }
+r-storage = { workspace = true }
+r-tracing = { workspace = true }
 
 
 solana-sdk = "2.0.0"

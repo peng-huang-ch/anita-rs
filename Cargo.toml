@@ -19,6 +19,15 @@ rust-version = "1.70"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
+# builtin
+anita = { path = "bin" }
+r-api = { path = "crates/api" }
+r-errors = { path = "crates/errors" }
+r-keys = { path = "crates/keys" }
+r-storage = { path = "crates/storage" }
+r-tracing = { path = "crates/tracing" }
+
+# external
 anyhow = "1.0.72"
 argon2 = "0.5"
 dotenvy = "0.15.7"
@@ -29,7 +38,6 @@ rayon = "1.10"
 
 clap = { version = "4", features = ["derive"] }
 eyre = "0.6.12"
-
 
 # validator
 validator = "0.18.1"
