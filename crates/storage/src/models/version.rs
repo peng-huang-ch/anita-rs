@@ -1,5 +1,6 @@
-use crate::{prelude::RunQueryDsl, DbConnection};
 use diesel::{sql_query, sql_types::Text, QueryableByName};
+
+use crate::{prelude::RunQueryDsl, tracing, DbConnection};
 
 #[derive(QueryableByName)]
 pub struct SqlVersion {
@@ -8,7 +9,7 @@ pub struct SqlVersion {
 }
 
 #[tracing::instrument(skip(conn))]
-pub async fn get_db_version<'a>(conn: &mut DbConnection<'a>) -> String {
+pub async fn get_db_version(conn: &mut DbConnection<'_>) -> String {
     let version = sql_query("SELECT version()")
         .get_result::<SqlVersion>(conn)
         .await

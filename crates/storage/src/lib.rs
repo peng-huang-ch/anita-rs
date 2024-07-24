@@ -1,21 +1,21 @@
 pub use diesel;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations};
+pub use r_tracing::tracing;
 
-pub mod models;
+mod database;
+mod error;
+mod handlers;
+mod models;
 mod pg;
 mod schema;
 mod utils;
 
-pub use pg::{
-    init_db, run_migrations, DbConnection, DbConnectionManger, DbError, DbPool, DbRunError,
-};
+pub use database::Database;
+pub use error::DatabaseError;
+use pg::{init_db, DbConnection, DbError};
 
 pub mod prelude {
-    pub use crate::{
-        init_db, models::version::get_db_version, models::*, run_migrations, utils::*,
-        DbConnection, DbConnectionManger, DbError, DbPool, DbRunError,
-    };
-
+    pub use crate::{database::Database, models::*, pg::run_migrations, utils::*, DatabaseError};
     pub use diesel_async::RunQueryDsl;
 }
 

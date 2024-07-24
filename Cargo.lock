@@ -2962,6 +2962,7 @@ version = "0.1.0"
 dependencies = [
  "aes-gcm",
  "argon2",
+ "async-trait",
  "chrono",
  "clap",
  "diesel",
@@ -2970,13 +2971,14 @@ dependencies = [
  "dotenvy",
  "hex",
  "openssl",
+ "r-tracing",
  "rand 0.8.5",
  "serde",
  "serde_json",
  "strum",
  "strum_macros",
+ "thiserror",
  "tokio",
- "tracing",
 ]
 
 [[package]]

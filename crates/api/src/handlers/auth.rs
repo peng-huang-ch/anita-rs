@@ -3,9 +3,10 @@ use actix_web::HttpRequest;
 use actix_web::{web, HttpMessage, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
-use r_storage::prelude::users::{get_auth_by_email, get_user_by_id};
-
-use crate::{tracing, DbPool, SrvError, SrvErrorKind};
+use crate::{
+    storage::{AuthTrait, Database, UserTrait},
+    tracing, SrvError, SrvErrorKind,
+};
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct LoginRequest {
@@ -21,15 +22,15 @@ If successful, a cookie is set with the JWT token for the user. 200 Ok is return
 ErrorCode::AUTH / 400 Bad Request - invalid email or password.
 ErrorCode::INTERNAL / 500 Bad Request - any other error.
 "#]
-#[tracing::instrument(name = "login", skip(pool, body, request), fields(email = %body.email))]
+#[tracing::instrument(name = "login", skip(db, body, request), fields(email = %body.email))]
 #[actix_web::post("/login")]
 pub async fn login(
-    pool: web::Data<DbPool>,
+    db: web::Data<Database>,
     body: web::Json<LoginRequest>,
     request: HttpRequest,
 ) -> actix_web::Result<impl Responder, SrvError> {
-    let mut conn = pool.get().await?;
-    let auth = get_auth_by_email(&mut conn, &body.email)
+    let auth = db
+        .get_auth_by_email(&body.email)
         .await?
         .ok_or_else(|| SrvErrorKind::InvalidEmailOrPassword)?;
 
@@ -37,7 +38,7 @@ pub async fn login(
         Err(SrvErrorKind::InvalidEmailOrPassword)?
     }
 
-    let user = get_user_by_id(&mut conn, auth.id).await?;
+    let user = db.get_user_by_id(auth.id).await?;
 
     // Attached a verified user identity to the active session.
     Identity::login(&request.extensions(), auth.id.to_string())?;

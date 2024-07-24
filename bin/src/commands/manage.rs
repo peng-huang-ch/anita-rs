@@ -3,9 +3,10 @@ use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
 
-use r_storage::models::chain::Chain;
-
-use crate::handlers::auth::{key_gen, key_sign, login, logout};
+use crate::{
+    handlers::auth::{key_gen, key_sign, login, logout},
+    storage::Chain,
+};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

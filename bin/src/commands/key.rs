@@ -1,12 +1,8 @@
 use clap::{Parser, Subcommand};
 
-use r_keys::keygen::keygen;
-use r_storage::{
-    init_db,
-    models::{
-        chain::Chain,
-        keys::{create_key, get_key_by_suffix, NewKey},
-    },
+use crate::{
+    keys::keygen::keygen,
+    storage::{Chain, Database, KeyTrait, NewKey},
 };
 
 #[derive(Parser, Debug)]
@@ -61,16 +57,14 @@ impl Command {
 
         let chain = self.chain;
         let suffix = self.suffix;
-        let pool = init_db(self.database_url.as_str()).await;
+        let database = Database::new_with_url(self.database_url.as_str()).await;
         match self.command {
             Subcommands::Get => {
-                let mut conn = pool.get().await?;
-                let key = get_key_by_suffix(&mut conn, chain, suffix).await?;
+                let key = database.get_key_by_suffix(chain, suffix.as_str()).await?;
                 println!("key: {:?}", key);
             }
             Subcommands::New { count, .. } => {
                 let pairs = keygen(count, suffix.as_str(), chain);
-                let mut conn = pool.get().await?;
                 let key = NewKey {
                     chain: pairs.chain.to_string(),
                     secret: pairs.secret.clone(),
@@ -79,12 +73,11 @@ impl Command {
                     suffix: suffix.clone(),
                     used_at: None,
                 };
-                let _ = create_key(&mut conn, key).await?;
+                let _ = database.create_key(key).await?;
                 println!("key: {}", pairs.secret);
                 println!("address : {}", pairs.address);
             }
             Subcommands::Vanity { count, .. } => loop {
-                let mut conn = pool.get().await?;
                 let pairs = keygen(count.into(), suffix.as_str(), chain);
                 let key = NewKey {
                     chain: pairs.chain.to_string(),
@@ -94,7 +87,7 @@ impl Command {
                     suffix: suffix.clone(),
                     used_at: Some(chrono::Utc::now().naive_utc()),
                 };
-                let _ = create_key(&mut conn, key).await?;
+                let _key = database.create_key(key).await?;
                 println!("key: {}", pairs.secret);
                 println!("address : {}", pairs.address);
             },

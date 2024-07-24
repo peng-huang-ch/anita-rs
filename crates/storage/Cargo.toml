@@ -8,10 +8,11 @@ license.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aes-gcm = { version = "0.10.3" }
+r-tracing = { workspace = true }
+
+thiserror = { workspace = true }
 argon2 = { workspace = true }
 clap = { workspace = true }
-tracing = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 
 chrono = { workspace = true, features = ["serde"] }
@@ -20,6 +21,8 @@ serde_json = { workspace = true }
 
 strum = { workspace = true, features = ["derive"] }
 strum_macros = { workspace = true }
+
+aes-gcm = { version = "0.10.3" }
 
 # database
 diesel = { version = "2.2.1", default-features = false, features = [
@@ -36,6 +39,7 @@ diesel_migrations = { version = "2.2.0" }
 hex = "0.4.1"
 rand = "0.8.5"
 openssl = "0.10.52"
+async-trait = "0.1.50"
 
 [dev-dependencies]
 dotenvy = "0.15.7"

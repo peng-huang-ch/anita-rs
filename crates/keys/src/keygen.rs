@@ -4,7 +4,7 @@ use std::sync::{
     mpsc, Arc,
 };
 
-use r_storage::models::chain::Chain;
+use r_storage::prelude::Chain;
 use r_tracing::tracing::info;
 
 use crate::{KeypairContext, Keypairs};

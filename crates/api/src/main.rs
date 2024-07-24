@@ -1,3 +1,4 @@
+use r_storage::Database;
 use r_tracing::init_logging;
 
 #[tokio::main]
@@ -14,8 +15,8 @@ async fn main() {
         .parse::<u16>()
         .expect("PORT must be a number");
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
+    let database = Database::new_with_url(&database_url).await;
     let guard = init_logging(server, level);
-    let _api = r_api::init_api(port, &database_url).await.expect("could not start api server");
+    let _api = r_api::init_api(port, database).await.expect("could not start api server");
     drop(guard);
 }

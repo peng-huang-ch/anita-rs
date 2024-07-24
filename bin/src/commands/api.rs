@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use r_api::init_api;
+use r_api::{init_api, Database};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -24,7 +24,8 @@ pub struct Command {
 impl Command {
     /// Execute `api` command
     pub async fn execute(self) -> eyre::Result<()> {
-        let _ = init_api(self.port, self.database_url.as_str()).await?;
+        let database = Database::new_with_url(self.database_url.as_str()).await;
+        let _ = init_api(self.port, database).await?;
         Ok(())
     }
 }

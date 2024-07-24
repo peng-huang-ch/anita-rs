@@ -8,11 +8,15 @@ use diesel_async::{
 };
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
+use crate::tracing;
+
 pub type DbPool = Pool<AsyncPgConnection>;
+#[allow(dead_code)]
 pub type DbConnectionManger = AsyncDieselConnectionManager<AsyncPgConnection>;
 pub type DbConnection<'a> = PooledConnection<'a, AsyncPgConnection>;
 pub type DbRunError = RunError;
 pub type DbError = diesel::result::Error;
+
 #[allow(dead_code)]
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
@@ -39,6 +43,7 @@ pub async fn run_migrations(database_url: &str) {
 
 #[cfg(test)]
 mod tests {
+
     use super::{init_db, run_migrations};
 
     #[tokio::main]
@@ -63,7 +68,7 @@ mod tests {
     #[test]
     #[ignore]
     async fn test_get_db_version() {
-        use crate::models::version::get_db_version;
+        use crate::prelude::get_db_version;
         dotenvy::dotenv().ok();
         let database_url = std::env::var("DATABASE_URL").expect("Expected DATABASE_URL to be set");
         let pool = init_db(database_url.as_str()).await;

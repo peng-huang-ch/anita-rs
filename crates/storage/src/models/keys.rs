@@ -1,12 +1,13 @@
+use async_trait::async_trait;
 use chrono;
-use diesel::{insert_into, prelude::*, update};
-use diesel_async::{AsyncConnection, RunQueryDsl};
+use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use tracing::instrument;
-
-use super::chain::{Chain, KeypairStrategy, Keypairs};
-use crate::{schema::keys, DbConnection, DbError};
+use crate::{
+    models::chain::{Chain, KeypairStrategy, Keypairs},
+    schema::keys,
+    DatabaseError,
+};
 
 /// Key details.
 #[derive(Queryable, Selectable, AsChangeset, PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -92,81 +93,24 @@ impl NewKey {
     }
 }
 
-#[instrument(skip(conn))]
-pub async fn get_key_by_suffix(
-    conn: &mut DbConnection<'_>,
-    chain: Chain,
-    suffix: String,
-) -> Result<Option<Key>, DbError> {
-    let chain_str = chain.to_string();
-    let result = conn
-        .transaction::<Option<Key>, DbError, _>(|conn| {
-            Box::pin(async move {
-                let key: Option<Key> = keys::table
-                    .filter(keys::used_at.is_null())
-                    .filter(keys::chain.eq(chain_str))
-                    .filter(keys::suffix.eq(suffix))
-                    .first::<Key>(conn)
-                    .await
-                    .optional()?;
+/// KeyTrait is an abstraction that would allow us to implement the same methods for different types of keys.
+#[async_trait]
+pub trait KeyTrait {
+    /// Get a key by suffix and chain.
+    async fn get_key_by_suffix(
+        &self,
+        chain: Chain,
+        suffix: &str,
+    ) -> Result<Option<Key>, DatabaseError>;
+    /// Create a key.
+    async fn create_key(&self, key: NewKey) -> Result<Key, DatabaseError>;
 
-                if let Some(key) = key {
-                    let updated_key = update(keys::table)
-                        .filter(keys::id.eq(key.id))
-                        .filter(keys::used_at.is_null())
-                        .set(keys::used_at.eq(chrono::Utc::now().naive_utc()))
-                        .get_result::<Key>(conn)
-                        .await
-                        .optional()?;
-                    Ok(updated_key)
-                } else {
-                    Ok(None)
-                }
-            })
-        })
-        .await?;
-    Ok(result)
-}
+    // /// Create multiple keys.
+    // async fn create_keys(keys: Vec<NewKey>) -> Result<Vec<i32>, DatabaseError>;
 
-#[instrument(skip(conn, key))]
-pub async fn create_key(conn: &mut DbConnection<'_>, key: NewKey) -> Result<Key, DbError> {
-    let key = insert_into(keys::table)
-        .values(&key)
-        .on_conflict(keys::secret)
-        .do_nothing()
-        .returning(Key::as_returning())
-        .get_result(conn)
-        .await?;
-    Ok(key)
-}
-
-#[tracing::instrument(skip(conn))]
-pub async fn create_keys<'a>(
-    conn: &mut DbConnection<'a>,
-    keys: Vec<NewKey>,
-) -> Result<Vec<i32>, DbError> {
-    let inserted = insert_into(keys::table)
-        .values(&keys)
-        .on_conflict(keys::secret)
-        .do_nothing()
-        .returning(keys::id)
-        .get_results(conn)
-        .await?;
-    Ok(inserted)
-}
-
-#[instrument(skip(conn))]
-pub async fn get_secret_by_pubkey(
-    conn: &mut DbConnection<'_>,
-    chain: Chain,
-    pubkey: String,
-) -> Result<Option<KeyWithSecret>, DbError> {
-    let key: Option<KeyWithSecret> = keys::table
-        .filter(keys::chain.eq(chain.to_string()))
-        .filter(keys::pubkey.eq(pubkey))
-        .select(KeyWithSecret::as_select())
-        .first::<KeyWithSecret>(conn)
-        .await
-        .optional()?;
-    Ok(key)
+    async fn get_secret_by_pubkey(
+        &self,
+        chain: Chain,
+        pubkey: &str,
+    ) -> Result<Option<KeyWithSecret>, DatabaseError>;
 }

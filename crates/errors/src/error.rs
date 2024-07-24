@@ -41,7 +41,7 @@ use std::{
     fmt::{Debug, Display},
 };
 
-use r_storage::{DbError, DbRunError};
+use r_storage::DatabaseError;
 use r_tracing::SpanTrace;
 
 pub type SrvResult<T> = Result<T, SrvError>;
@@ -76,10 +76,8 @@ pub enum SrvErrorKind {
 
     #[error("server is busy, try again later.  {:?}", .0)]
     BlockingError(#[from] BlockingError),
-    #[error("database `{0}` is not available")]
-    DatabaseRunError(#[from] DbRunError),
     #[error("database is not available: `{0}`")]
-    DatabaseError(#[from] DbError),
+    DatabaseError(#[from] DatabaseError),
 }
 
 #[derive(Debug)]

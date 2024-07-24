@@ -11,11 +11,16 @@ use tracing_actix_web::TracingLogger;
 // re-export the dependencies
 pub use r_errors::{SrvError, SrvErrorKind};
 pub use r_keys::KeypairContext;
-pub use r_storage::{init_db, prelude::chain::Chain, DbPool};
 pub use r_tracing::{
     tracing,
     tracing::{debug, error, info, warn},
 };
+
+/// Re-exported from `r_storage`.
+pub mod storage {
+    pub use r_storage::prelude::*;
+}
+pub use storage::Database;
 
 mod handlers;
 // mod middlewares;
@@ -30,11 +35,8 @@ fn get_session_key_from_env() -> Key {
     key
 }
 
-pub async fn init_api(port: u16, database_url: &str) -> std::io::Result<()> {
+pub async fn init_api(port: u16, database: Database) -> std::io::Result<()> {
     let addr = format!("0.0.0.0:{}", port);
-    debug!(target: "init", "Initializing database...");
-    let pool = init_db(database_url).await;
-    debug!(target: "init", "Database initialized and listening on {}...", addr);
 
     let session_key = get_session_key_from_env();
     let srv: actix_web::dev::Server = HttpServer::new(move || {
@@ -44,7 +46,7 @@ pub async fn init_api(port: u16, database_url: &str) -> std::io::Result<()> {
                 .cookie_secure(false)
                 .build();
         App::new()
-            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(database.clone()))
             .wrap(RequestTracing::new())
             .wrap(RequestMetrics::default())
             .wrap(TracingLogger::default())
@@ -54,20 +56,12 @@ pub async fn init_api(port: u16, database_url: &str) -> std::io::Result<()> {
             // AFTER the identity middleware: `actix-web` invokes middleware in the OPPOSITE
             // order of registration when it receives an incoming request.
             .wrap(session_mw)
+            .service(handlers::health::get_health)
             .service(
                 web::scope("/auth").service(handlers::auth::login).service(handlers::auth::logout),
             )
             .service(
                 web::scope("/keys")
-                    .service(handlers::health::get_health)
-                    .service(handlers::key::get_suffix_key)
-                    .service(handlers::key::get_key)
-                    .service(handlers::key::key_gen)
-                    .service(handlers::key::key_sign),
-            )
-            .service(
-                web::scope("/")
-                    .service(handlers::health::get_health)
                     .service(handlers::key::get_suffix_key)
                     .service(handlers::key::get_key)
                     .service(handlers::key::key_gen)

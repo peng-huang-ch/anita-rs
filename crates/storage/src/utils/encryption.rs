@@ -21,6 +21,7 @@ use aes_gcm::{
 /// let ciphertext = encrypt(key, text).unwrap();
 /// println!("{:?}", ciphertext);
 /// ```
+#[allow(dead_code)]
 pub fn encrypt(key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, Error> {
     let key = Key::<Aes256Gcm>::from_slice(key);
     let nonce = Aes256Gcm::generate_nonce(&mut OsRng); // 96-bits; unique per message
@@ -51,6 +52,7 @@ pub fn encrypt(key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, Error> {
 /// let plaintext = decrypt(key, &ciphertext).unwrap();
 /// println!("{:?}", ciphertext);
 /// ```
+#[allow(dead_code)]
 pub fn decrypt(key: &[u8], encryptedtext: &[u8]) -> Result<Vec<u8>, Error> {
     let key = Key::<Aes256Gcm>::from_slice(key);
     let (nonce_arr, ciphertext) = encryptedtext.split_at(12);
