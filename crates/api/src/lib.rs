@@ -10,9 +10,12 @@ use tracing_actix_web::TracingLogger;
 
 // re-export the dependencies
 pub use r_errors::{SrvError, SrvErrorKind};
-pub use r_storage::init_db;
-pub use r_tracing::tracing;
-pub use r_tracing::tracing::{debug, error, info, warn};
+pub use r_keys::KeypairContext;
+pub use r_storage::{init_db, prelude::chain::Chain, DbPool};
+pub use r_tracing::{
+    tracing,
+    tracing::{debug, error, info, warn},
+};
 
 mod handlers;
 // mod middlewares;

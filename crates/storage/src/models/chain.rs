@@ -29,9 +29,10 @@ pub enum Chain {
     UNKNOWN,
 }
 
+/// Keypair interface.
 pub trait KeypairStrategy {
     fn chain(&self) -> Chain;
-    fn generate_keypair(&self) -> Keypairs;
+    fn generate(&self) -> Keypairs;
     fn from_secret(&self, secret: &str) -> Keypairs;
     fn sign(&self, secret: &str, message: &[u8]) -> String;
 }
@@ -44,8 +45,6 @@ pub struct Keypairs {
     pub pubkey: String,
     pub address: String,
 }
-
-/// Keypair interface.
 
 #[cfg(test)]
 mod tests {

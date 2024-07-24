@@ -3,12 +3,9 @@ use actix_web::HttpRequest;
 use actix_web::{web, HttpMessage, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
-use r_storage::{
-    prelude::users::{get_auth_by_email, get_user_by_id},
-    DbPool,
-};
+use r_storage::prelude::users::{get_auth_by_email, get_user_by_id};
 
-use crate::{tracing, SrvError, SrvErrorKind};
+use crate::{tracing, DbPool, SrvError, SrvErrorKind};
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct LoginRequest {

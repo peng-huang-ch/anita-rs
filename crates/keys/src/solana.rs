@@ -23,7 +23,7 @@ impl KeypairStrategy for SolanaKeyPair {
         Chain::SOLANA
     }
 
-    fn generate_keypair(&self) -> Keypairs {
+    fn generate(&self) -> Keypairs {
         let keypair = Keypair::new();
         Self::to_keypairs(keypair)
     }
@@ -47,7 +47,7 @@ mod tests {
     #[test]
     fn test_generator() {
         let strategy = Box::new(SolanaKeyPair);
-        let pairs = strategy.generate_keypair();
+        let pairs = strategy.generate();
         assert!(pairs.pubkey.eq_ignore_ascii_case(pairs.address.as_str()));
     }
 }

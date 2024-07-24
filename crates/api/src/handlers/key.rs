@@ -4,18 +4,12 @@ use actix_identity::Identity;
 use actix_web::{get, http::StatusCode, post, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
-use r_keys::KeypairContext;
-use r_storage::{
-    prelude::{
-        chain::Chain,
-        keys::{create_key, get_key_by_suffix, get_secret_by_pubkey, NewKey},
-        users::get_user_by_id,
-    },
-    DbPool,
+use r_storage::prelude::{
+    keys::{create_key, get_key_by_suffix, get_secret_by_pubkey, NewKey},
+    users::get_user_by_id,
 };
-use r_tracing::tracing;
 
-use crate::{info, SrvError, SrvErrorKind};
+use crate::{info, tracing, Chain, DbPool, KeypairContext, SrvError, SrvErrorKind};
 
 #[derive(Debug, Deserialize)]
 pub struct SuffixKeyGenRequest {
@@ -115,7 +109,7 @@ pub async fn key_sign(
     let context = KeypairContext::from_chain(chain);
 
     let message = body.message.as_bytes();
-    let signature = key.sign(&context.strategy, message);
+    let signature = key.sign(context.keypair(), message);
 
     Ok(HttpResponse::Ok().json(KeySignResponse {
         signature,
