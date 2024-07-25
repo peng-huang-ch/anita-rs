@@ -4,7 +4,7 @@ use actix_web::{web, HttpMessage, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    storage::{AuthTrait, Database, UserTrait},
+    storage::{Database, UserTrait},
     tracing, SrvError, SrvErrorKind,
 };
 

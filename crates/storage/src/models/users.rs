@@ -52,15 +52,11 @@ pub struct NewUser {
     pub created_at: Option<chrono::NaiveDateTime>,
 }
 
-/// KeyTrait is an abstraction that would allow us to implement the same methods for different types of keys.
-#[async_trait]
-pub trait AuthTrait {
-    /// Get a auth by email.
-    async fn get_auth_by_email(&self, email: &str) -> Result<Option<Auth>, DatabaseError>;
-}
-
 #[async_trait]
 pub trait UserTrait {
+    /// Get a auth by email.
+    async fn get_auth_by_email(&self, email: &str) -> Result<Option<Auth>, DatabaseError>;
+
     /// get a user by id.
     async fn get_user_by_id(&self, id: i32) -> Result<Option<User>, DatabaseError>;
 }

@@ -2,15 +2,16 @@ use async_trait::async_trait;
 
 use crate::{
     handlers::{
-        auth::get_auth_by_email,
         keys::{create_key, get_key_by_suffix, get_secret_by_pubkey},
-        users::get_user_by_id,
+        users::{get_auth_by_email, get_user_by_id},
     },
     init_db,
-    models::{Auth, AuthTrait, Chain, Key, KeyTrait, KeyWithSecret, NewKey, User, UserTrait},
+    models::{Auth, Chain, Key, KeyWithSecret, NewKey, User},
     pg::DbPool,
     DatabaseError, DbConnection,
 };
+
+pub use crate::models::{KeyTrait, UserTrait};
 
 #[derive(Clone, Debug)]
 pub struct Database {
@@ -37,16 +38,13 @@ impl Database {
 }
 
 #[async_trait]
-impl AuthTrait for Database {
+impl UserTrait for Database {
     async fn get_auth_by_email(&self, email: &str) -> Result<Option<Auth>, DatabaseError> {
         let mut conn = self.with_conn().await?;
         let auth = get_auth_by_email(&mut conn, email).await?;
         Ok(auth)
     }
-}
 
-#[async_trait]
-impl UserTrait for Database {
     async fn get_user_by_id(&self, id: i32) -> Result<Option<User>, DatabaseError> {
         let mut conn = self.with_conn().await?;
         let user = get_user_by_id(&mut conn, id).await?;

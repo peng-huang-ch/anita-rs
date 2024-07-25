@@ -2,7 +2,7 @@ use diesel::{insert_into, prelude::*};
 use diesel_async::RunQueryDsl;
 
 use crate::{
-    models::{NewUser, User},
+    models::{Auth, NewUser, User},
     schema::users,
     tracing, DbConnection, DbError,
 };
@@ -27,4 +27,18 @@ pub async fn create_user(conn: &mut DbConnection<'_>, doc: &NewUser) -> Result<u
         .execute(conn)
         .await?;
     Ok(rows_inserted)
+}
+
+#[tracing::instrument(skip(conn))]
+pub async fn get_auth_by_email(
+    conn: &mut DbConnection<'_>,
+    email: &str,
+) -> Result<Option<Auth>, DbError> {
+    let auth = users::table
+        .filter(users::email.eq(email))
+        .select(Auth::as_select())
+        .first(conn)
+        .await
+        .optional()?;
+    Ok(auth)
 }
