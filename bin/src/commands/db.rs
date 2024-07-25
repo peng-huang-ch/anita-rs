@@ -33,7 +33,7 @@ impl Command {
                 println!("database migrations complete")
             }
             Subcommands::Version {} => {
-                let database = Database::new_with_url(database_url).await;
+                let database = Database::new_with_url(database_url, None).await;
                 let mut conn = database.with_conn().await.expect("could not get connection");
 
                 let version = get_db_version(&mut conn).await;

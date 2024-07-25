@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use r_api::KeypairContext;
 
 use crate::{
     keys::keygen::keygen,
@@ -18,6 +19,10 @@ pub struct Command {
         required = true
     )]
     database_url: String,
+
+    /// The database seed.
+    #[arg(long, value_name = "seed", env("SEED"), hide_env_values = true)]
+    seed: Option<String>,
 
     /// The chain to use
     #[clap(short, long, value_enum, default_value_t = Chain::SOLANA)]
@@ -57,39 +62,37 @@ impl Command {
 
         let chain = self.chain;
         let suffix = self.suffix;
-        let database = Database::new_with_url(self.database_url.as_str()).await;
+        let seed = self
+            .seed
+            .map(|s| Database::to_seed(s.as_str()).expect("Seed must be a valid hex string"));
+        let database = Database::new_with_url(self.database_url.as_str(), seed).await;
         match self.command {
             Subcommands::Get => {
                 let key = database.get_key_by_suffix(chain, suffix.as_str()).await?;
                 println!("key: {:?}", key);
             }
             Subcommands::New { count, .. } => {
-                let pairs = keygen(count, suffix.as_str(), chain);
-                let key = NewKey {
-                    chain: pairs.chain.to_string(),
-                    secret: pairs.secret.clone(),
-                    pubkey: pairs.pubkey.clone(),
-                    address: pairs.address.clone(),
-                    suffix: suffix.clone(),
-                    used_at: None,
-                };
+                let secret = keygen(count, suffix.as_str(), chain);
+                let context = KeypairContext::from_chain_secret(chain, secret.as_str());
+                let keypair = context.keypair();
+
+                let key = NewKey::from_keypair(keypair, Some(suffix.clone()));
                 let _ = database.create_key(key).await?;
-                println!("key: {}", pairs.secret);
-                println!("address : {}", pairs.address);
+
+                println!("key: {}", secret);
+                println!("address : {}", keypair.address());
             }
             Subcommands::Vanity { count, .. } => loop {
-                let pairs = keygen(count.into(), suffix.as_str(), chain);
-                let key = NewKey {
-                    chain: pairs.chain.to_string(),
-                    secret: pairs.secret.clone(),
-                    pubkey: pairs.pubkey.clone(),
-                    address: pairs.address.clone(),
-                    suffix: suffix.clone(),
-                    used_at: Some(chrono::Utc::now().naive_utc()),
-                };
-                let _key = database.create_key(key).await?;
-                println!("key: {}", pairs.secret);
-                println!("address : {}", pairs.address);
+                let secret = keygen(count, suffix.as_str(), chain);
+                let context = KeypairContext::from_chain_secret(chain, secret.as_str());
+                let keypair = context.keypair();
+
+                let mut key = NewKey::from_keypair(keypair, Some(suffix.clone()));
+                key.used_at = Some(chrono::Utc::now().naive_utc());
+
+                let _ = database.create_key(key).await?;
+                println!("key: {}", secret);
+                println!("address : {}", keypair.address());
             },
         }
 

@@ -3,6 +3,21 @@ use aes_gcm::{
     Aes256Gcm, Error, Key, Nonce,
 };
 
+use crate::DatabaseError;
+
+/// This function generates a random AES-256 key.
+#[allow(dead_code)]
+pub fn generate_key() -> Key<Aes256Gcm> {
+    Aes256Gcm::generate_key(&mut OsRng)
+}
+
+/// This function checks if a given string is a valid AES-256 key.
+pub fn to_seed(key: &str) -> Result<Vec<u8>, DatabaseError> {
+    let vec = hex::decode(key)?;
+    let key = Key::<Aes256Gcm>::from_slice(vec.as_slice());
+    Ok(key.to_vec())
+}
+
 /// This function encrypts a plaintext message using AES-256 in CBC mode with the provided initialization vector and secret key.
 ///
 /// # Arguments
@@ -21,7 +36,6 @@ use aes_gcm::{
 /// let ciphertext = encrypt(key, text).unwrap();
 /// println!("{:?}", ciphertext);
 /// ```
-#[allow(dead_code)]
 pub fn encrypt(key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, Error> {
     let key = Key::<Aes256Gcm>::from_slice(key);
     let nonce = Aes256Gcm::generate_nonce(&mut OsRng); // 96-bits; unique per message
@@ -52,7 +66,6 @@ pub fn encrypt(key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, Error> {
 /// let plaintext = decrypt(key, &ciphertext).unwrap();
 /// println!("{:?}", ciphertext);
 /// ```
-#[allow(dead_code)]
 pub fn decrypt(key: &[u8], encryptedtext: &[u8]) -> Result<Vec<u8>, Error> {
     let key = Key::<Aes256Gcm>::from_slice(key);
     let (nonce_arr, ciphertext) = encryptedtext.split_at(12);
@@ -65,6 +78,7 @@ pub fn decrypt(key: &[u8], encryptedtext: &[u8]) -> Result<Vec<u8>, Error> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
@@ -77,5 +91,12 @@ mod tests {
 
         assert_eq!(text.to_vec(), decrypted);
         assert_eq!("Hello, world!".to_string(), String::from_utf8(text.to_vec()).unwrap());
+    }
+
+    #[test]
+    fn test_generate_key() {
+        let key = generate_key();
+        let text = hex::encode(key.as_slice());
+        println!("{}", text);
     }
 }

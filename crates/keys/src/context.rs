@@ -1,5 +1,5 @@
 use crate::SolanaKeyPair;
-use crate::{Chain, KeypairStrategy, Keypairs};
+use crate::{Chain, DatabaseError, KeypairStrategy};
 
 /// A context for generating and signing keypairs.
 pub struct KeypairContext {
@@ -18,18 +18,27 @@ impl KeypairContext {
         KeypairContext { keypair, chain }
     }
 
+    /// Create a new keypair context with secret.
+    pub fn from_chain_secret(chain: Chain, secret: &str) -> Self {
+        let keypair: Box<dyn KeypairStrategy> = match chain {
+            Chain::SOLANA => Box::new(SolanaKeyPair::from_secret(secret)),
+            _ => Box::new(SolanaKeyPair::from_secret(secret)),
+        };
+        KeypairContext { keypair, chain }
+    }
+
     pub fn keypair(&self) -> &Box<dyn KeypairStrategy> {
         &self.keypair
     }
 
     /// Generate a new keypair.
-    pub fn generate_keypair(&self) -> Keypairs {
-        self.keypair.generate()
+    pub fn generate_keypair(&mut self) -> &Box<dyn KeypairStrategy> {
+        let _ = &mut self.keypair.generate();
+        &self.keypair
     }
 
     /// Sign a message with a secret key.
-    pub fn sign(&self, secret: &str, message: &str) -> String {
-        let message = message.as_bytes();
+    pub fn sign(&self, secret: &[u8], message: &[u8]) -> Result<String, DatabaseError> {
         self.keypair.sign(secret, message)
     }
 }

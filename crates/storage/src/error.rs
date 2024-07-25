@@ -8,4 +8,8 @@ pub enum DatabaseError {
     DatabaseRunError(#[from] DbRunError),
     #[error("database is not available: `{0}`")]
     DatabaseError(#[from] DbError),
+    #[error("{0}")]
+    HexError(#[from] hex::FromHexError),
+    #[error("invalid secret `{0}`")]
+    SecretError(String),
 }

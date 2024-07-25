@@ -67,7 +67,7 @@ pub async fn key_gen(
     let chain = body.chain;
 
     let context = KeypairContext::from_chain(chain);
-    let keypair = context.generate_keypair();
+    let keypair = context.keypair();
     let key = NewKey::from_keypair(keypair, None);
     let saved = db.create_key(key).await?;
 
@@ -108,7 +108,7 @@ pub async fn key_sign(
     let context = KeypairContext::from_chain(chain);
 
     let message = body.message.as_bytes();
-    let signature = key.sign(context.keypair(), message);
+    let signature = key.sign(context.keypair(), message)?;
 
     Ok(HttpResponse::Ok().json(KeySignResponse {
         signature,

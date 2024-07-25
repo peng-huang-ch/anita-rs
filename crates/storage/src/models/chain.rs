@@ -2,6 +2,8 @@ use serde::Deserialize;
 use strum::{Display, EnumCount, EnumDiscriminants, EnumString};
 use strum_macros::{AsRefStr, EnumIs};
 
+use crate::DatabaseError;
+
 #[derive(
     AsRefStr,
     clap::ValueEnum,
@@ -31,19 +33,24 @@ pub enum Chain {
 
 /// Keypair interface.
 pub trait KeypairStrategy {
+    /// Get the chain.
     fn chain(&self) -> Chain;
-    fn generate(&self) -> Keypairs;
-    fn from_secret(&self, secret: &str) -> Keypairs;
-    fn sign(&self, secret: &str, message: &[u8]) -> String;
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct Keypairs {
-    pub chain: Chain,
-    #[serde(skip_serializing)] // do not serialize secret
-    pub secret: String,
-    pub pubkey: String,
-    pub address: String,
+    /// Generate a new keypair.
+    fn generate(&mut self);
+    /// Recover a keypair from a bytes.
+    fn recover_secret(&mut self, secret: &str) -> Result<(), DatabaseError>;
+    /// Recover a keypair from a bytes.
+    fn recover_from_bytes(&mut self, bytes: &[u8]) -> Result<(), DatabaseError>;
+    /// Get the secret key.
+    fn to_vec(&self) -> Vec<u8>;
+    /// Get the secret key.
+    fn secret(&self) -> String;
+    /// Get the public key.
+    fn pubkey(&self) -> String;
+    /// Get the address key.
+    fn address(&self) -> String;
+    /// Sign a message with a external secret.
+    fn sign(&self, secret: &[u8], message: &[u8]) -> Result<String, DatabaseError>;
 }
 
 #[cfg(test)]

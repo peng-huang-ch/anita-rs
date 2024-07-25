@@ -15,7 +15,7 @@ pub use error::DatabaseError;
 use pg::{init_db, DbConnection, DbError};
 
 pub mod prelude {
-    pub use crate::{database::Database, models::*, pg::run_migrations, utils::*, DatabaseError};
+    pub use crate::{models::*, pg::run_migrations, utils::*, Database, DatabaseError};
     pub use diesel_async::RunQueryDsl;
 }
 

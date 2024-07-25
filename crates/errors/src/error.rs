@@ -76,7 +76,8 @@ pub enum SrvErrorKind {
 
     #[error("server is busy, try again later.  {:?}", .0)]
     BlockingError(#[from] BlockingError),
-    #[error("database is not available: `{0}`")]
+
+    #[error("{0}")]
     DatabaseError(#[from] DatabaseError),
 }
 

@@ -8,26 +8,32 @@ use crate::{
     init_db,
     models::{Auth, Chain, Key, KeyWithSecret, NewKey, User},
     pg::DbPool,
+    utils::encryption::{decrypt, encrypt, to_seed},
     DatabaseError, DbConnection,
 };
 
 pub use crate::models::{KeyTrait, UserTrait};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Database {
     pool: DbPool,
+    seed: Option<Vec<u8>>,
 }
 
 impl Database {
     /// Create a new database connection pool with the given pool.
-    pub fn new_pool(pool: DbPool) -> Self {
-        Self { pool }
+    pub fn new_pool(pool: DbPool, seed: Option<Vec<u8>>) -> Self {
+        Self { pool, seed }
+    }
+
+    pub fn to_seed(seed: &str) -> Result<Vec<u8>, DatabaseError> {
+        to_seed(seed)
     }
 
     /// Create a new database connection pool with the given URL.
-    pub async fn new_with_url(url: &str) -> Self {
+    pub async fn new_with_url(url: &str, seed: Option<Vec<u8>>) -> Self {
         let db = init_db(url).await;
-        Self::new_pool(db)
+        Self::new_pool(db, seed)
     }
 
     /// Get a connection from the pool.
@@ -64,19 +70,40 @@ impl KeyTrait for Database {
         Ok(key)
     }
 
+    /// Create a key.
+    /// If the seed is set, the secret will be encrypted with the seed.
+    /// Otherwise, the secret will be stored in plain text.
     async fn create_key(&self, key: NewKey) -> Result<Key, DatabaseError> {
         let mut conn = self.with_conn().await?;
-        let key = create_key(&mut conn, key).await?;
-        Ok(key)
+        let mut key = key;
+        if let Some(seed) = self.seed.clone() {
+            let secret_bytes = KeyWithSecret::decode(key.secret.as_str())?;
+            let encrypted: Vec<u8> = encrypt(seed.as_slice(), secret_bytes.as_slice())
+                .map_err(|e| DatabaseError::SecretError(e.to_string()))?;
+            key.secret = KeyWithSecret::encode(encrypted.as_slice());
+        }
+        let saved = create_key(&mut conn, key.clone()).await?;
+        Ok(saved)
     }
 
+    /// Get a key by pubkey.
+    /// If the seed is set, the secret will be decrypted with the seed.
+    /// Otherwise, the secret will be returned as is.
     async fn get_secret_by_pubkey(
         &self,
         chain: Chain,
         pubkey: &str,
     ) -> Result<Option<KeyWithSecret>, DatabaseError> {
         let mut conn = self.with_conn().await?;
-        let secret = get_secret_by_pubkey(&mut conn, chain, pubkey.to_string()).await?;
-        Ok(secret)
+        let mut key = get_secret_by_pubkey(&mut conn, chain, pubkey.to_string()).await?;
+        if let Some(key) = key.as_mut() {
+            if let Some(seed) = self.seed.clone() {
+                let text = key.into_vec()?;
+                let original = decrypt(seed.as_slice(), &text)
+                    .map_err(|e| DatabaseError::SecretError(e.to_string()))?;
+                key.set_secret(&original);
+            }
+        }
+        Ok(key)
     }
 }

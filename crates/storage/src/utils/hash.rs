@@ -26,7 +26,7 @@ mod tests {
     fn test_hash() {
         let password = "anita.123";
         let hashed = hash_password(password);
-        println!("Hashed: {}", hashed);
+        println!("hashed: {}", hashed);
         assert!(verify_password(password, &hashed));
     }
 }

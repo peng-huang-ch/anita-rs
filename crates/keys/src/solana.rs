@@ -1,20 +1,17 @@
 use solana_sdk::bs58;
 use solana_sdk::signature::{Keypair, Signer};
 
-use crate::{Chain, KeypairStrategy, Keypairs};
+use crate::{Chain, DatabaseError, KeypairStrategy};
 
-pub struct SolanaKeyPair;
+pub struct SolanaKeyPair(Keypair);
 
 impl SolanaKeyPair {
     pub fn new() -> Self {
-        SolanaKeyPair
+        SolanaKeyPair(Keypair::new())
     }
 
-    pub fn to_keypairs(keypair: Keypair) -> Keypairs {
-        let secret = keypair.to_base58_string();
-        let pubkey = keypair.pubkey();
-        let address = bs58::encode(pubkey).into_string();
-        Keypairs { chain: Chain::SOLANA, secret, pubkey: address.clone(), address }
+    pub fn from_secret(s: &str) -> Self {
+        SolanaKeyPair(Keypair::from_base58_string(s))
     }
 }
 
@@ -23,31 +20,64 @@ impl KeypairStrategy for SolanaKeyPair {
         Chain::SOLANA
     }
 
-    fn generate(&self) -> Keypairs {
-        let keypair = Keypair::new();
-        Self::to_keypairs(keypair)
+    fn generate(&mut self) {
+        self.0 = Keypair::new();
     }
 
-    fn from_secret(&self, secret: &str) -> Keypairs {
+    fn recover_secret(&mut self, secret: &str) -> Result<(), DatabaseError> {
         let keypair = Keypair::from_base58_string(secret);
-        Self::to_keypairs(keypair)
+        self.0 = keypair;
+        Ok(())
     }
 
-    fn sign(&self, secret: &str, message: &[u8]) -> String {
-        let keypair = Keypair::from_base58_string(secret);
+    fn recover_from_bytes(&mut self, bytes: &[u8]) -> Result<(), DatabaseError> {
+        let keypair =
+            Keypair::from_bytes(bytes).map_err(|e| DatabaseError::SecretError(e.to_string()))?;
+        self.0 = keypair;
+        Ok(())
+    }
+
+    fn to_vec(&self) -> Vec<u8> {
+        self.0.to_bytes().to_vec()
+    }
+
+    fn secret(&self) -> String {
+        self.0.to_base58_string()
+    }
+
+    fn pubkey(&self) -> String {
+        self.0.pubkey().to_string()
+    }
+
+    fn address(&self) -> String {
+        self.pubkey()
+    }
+
+    /// sign message with hex secret u8a
+    fn sign(&self, secret: &[u8], message: &[u8]) -> Result<String, DatabaseError> {
+        let keypair =
+            Keypair::from_bytes(secret).map_err(|e| DatabaseError::SecretError(e.to_string()))?;
         let signature = keypair.sign_message(message);
-        bs58::encode(signature).into_string()
+        let signature = bs58::encode(signature).into_string();
+        Ok(signature)
     }
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
     fn test_generator() {
-        let strategy = Box::new(SolanaKeyPair);
-        let pairs = strategy.generate();
-        assert!(pairs.pubkey.eq_ignore_ascii_case(pairs.address.as_str()));
+        let mut strategy = Box::new(SolanaKeyPair::new());
+        let secret: String = strategy.secret();
+        let pairs = Keypair::from_base58_string(secret.as_str());
+
+        strategy.recover_from_bytes(pairs.to_bytes().as_slice()).unwrap();
+
+        assert!(pairs.to_base58_string().eq_ignore_ascii_case(strategy.secret().as_str()));
+        assert!(pairs.pubkey().to_string().eq_ignore_ascii_case(strategy.pubkey().as_str()));
+        assert!(pairs.pubkey().to_string().eq_ignore_ascii_case(strategy.address().as_str()));
     }
 }
