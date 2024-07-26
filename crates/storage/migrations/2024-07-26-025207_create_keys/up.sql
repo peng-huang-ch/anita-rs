@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS "keys" (
     id SERIAL PRIMARY KEY,
     chain VARCHAR NOT NULL,
-    secret VARCHAR NOT NULL,
+    secret BYTEA NOT NULL,
     pubkey VARCHAR NOT NULL,
     address VARCHAR NOT NULL,
     suffix VARCHAR NOT NULL,

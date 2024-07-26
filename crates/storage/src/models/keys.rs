@@ -18,7 +18,7 @@ pub struct Key {
     #[serde(rename = "chain")]
     pub chain: String,
     #[serde(skip_serializing)]
-    secret: String,
+    secret: Vec<u8>,
     #[serde(rename = "pubkey")]
     pub pubkey: String,
     #[serde(rename = "address")]
@@ -40,34 +40,18 @@ pub struct KeyWithSecret {
     #[diesel(embed)]
     #[serde(flatten)]
     pub key: Key,
-    pub secret: String, // hex string
+    secret: Vec<u8>, // hex string
 }
 
 impl KeyWithSecret {
-    /// set the secret key.
-    pub fn encode(secret: &[u8]) -> String {
-        hex::encode(secret)
-    }
-
-    pub fn decode(secret: &str) -> Result<Vec<u8>, DatabaseError> {
-        let decoded = hex::decode(secret)?;
-        Ok(decoded)
-    }
-
     /// Get the secret key.
-    pub fn secret(&self) -> &str {
-        &self.secret
+    pub fn secret(&self) -> Vec<u8> {
+        self.secret.clone()
     }
 
     /// set the secret key.
     pub fn set_secret(&mut self, src: &[u8]) {
-        self.secret = Self::encode(src);
-    }
-
-    /// set the secret key.
-    pub fn into_vec(&self) -> Result<Vec<u8>, DatabaseError> {
-        let value: Vec<u8> = hex::decode(&self.secret)?;
-        Ok(value)
+        self.secret = src.to_vec();
     }
 
     /// Sign a message with the key pair sign method.
@@ -76,8 +60,7 @@ impl KeyWithSecret {
         mut keypair: Box<dyn KeypairStrategy>,
         message: &[u8],
     ) -> Result<String, DatabaseError> {
-        let bytes = self.into_vec()?;
-        keypair.recover_from_bytes(bytes.as_slice())?;
+        keypair.recover_from_bytes(self.secret.as_slice())?;
 
         let signature = keypair.sign(message)?;
         Ok(signature)
@@ -92,7 +75,7 @@ pub struct NewKey {
     #[serde(rename = "chain")]
     pub chain: String,
     #[serde(rename = "secret")]
-    pub secret: String,
+    secret: Vec<u8>,
     #[serde(rename = "pubkey")]
     pub pubkey: String,
     #[serde(rename = "address")]
@@ -110,7 +93,6 @@ impl NewKey {
         let suffix = suffix
             .map(|f| f.to_ascii_lowercase())
             .unwrap_or_else(|| address[address.len() - 4..].to_ascii_lowercase());
-        let secret = KeyWithSecret::encode(secret.as_slice());
         NewKey {
             chain: keypair.chain().to_string(),
             secret,
@@ -119,6 +101,16 @@ impl NewKey {
             suffix,
             used_at: None,
         }
+    }
+
+    pub fn get_secret(&self) -> Vec<u8> {
+        self.secret.clone()
+    }
+
+    /// Get the secret key.
+    /// The secret key is encrypted with the seed.
+    pub fn set_secret(&mut self, encrypted: &[u8]) {
+        self.secret = encrypted.to_vec();
     }
 }
 

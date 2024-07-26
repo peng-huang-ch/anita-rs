@@ -8,6 +8,12 @@ license.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# built-in
+r-storage = { workspace = true }
+r-tracing = { workspace = true }
+r-keys = { workspace = true }
+r-errors = { workspace = true, features = ["actix"] }
+
 anyhow = { workspace = true }
 actix-web = { version = "4.8.0" }
 actix-session = { version = "0.9.0", features = ["cookie-session"] }
@@ -20,12 +26,6 @@ dotenvy = "0.15.7"
 
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-
-# internal
-r-storage = { workspace = true }
-r-tracing = { workspace = true }
-r-keys = { workspace = true }
-r-errors = { workspace = true, features = ["actix"] }
 
 # opentelemetry
 opentelemetry = { version = "0.20.0", features = [

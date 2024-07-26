@@ -77,10 +77,10 @@ impl KeyTrait for Database {
         let mut conn = self.with_conn().await?;
         let mut key = key;
         if let Some(seed) = self.seed.clone() {
-            let secret_bytes = KeyWithSecret::decode(key.secret.as_str())?;
-            let encrypted: Vec<u8> = encrypt(seed.as_slice(), secret_bytes.as_slice())
+            let secret_bytes = key.get_secret();
+            let encrypted = encrypt(seed.as_slice(), secret_bytes.as_slice())
                 .map_err(|e| DatabaseError::SecretError(e.to_string()))?;
-            key.secret = KeyWithSecret::encode(encrypted.as_slice());
+            key.set_secret(encrypted.as_slice());
         }
         let saved = create_key(&mut conn, key.clone()).await?;
         Ok(saved)
@@ -98,8 +98,7 @@ impl KeyTrait for Database {
         let mut key = get_secret_by_pubkey(&mut conn, chain, pubkey.to_string()).await?;
         if let Some(key) = key.as_mut() {
             if let Some(seed) = self.seed.clone() {
-                let text = key.into_vec()?;
-                let original = decrypt(seed.as_slice(), &text)
+                let original = decrypt(seed.as_slice(), key.secret().as_slice())
                     .map_err(|e| DatabaseError::SecretError(e.to_string()))?;
                 key.set_secret(&original);
             }

@@ -4,7 +4,7 @@ diesel::table! {
     keys (id) {
         id -> Int4,
         chain -> Varchar,
-        secret -> Varchar,
+        secret -> Bytea,
         pubkey -> Varchar,
         address -> Varchar,
         suffix -> Varchar,
