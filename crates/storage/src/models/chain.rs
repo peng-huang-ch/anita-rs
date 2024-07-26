@@ -24,20 +24,20 @@ use crate::DatabaseError;
 pub enum Chain {
     /// Docs on red
     #[strum(ascii_case_insensitive, serialize = "solana", serialize = "sol")]
-    SOLANA,
+    Solana,
     #[strum(ascii_case_insensitive, serialize = "eth", to_string = "eth")]
-    ETH,
+    Ethereum,
     #[strum(disabled)]
-    UNKNOWN,
+    Unknown,
 }
 
 /// Keypair interface.
-pub trait KeypairStrategy {
+pub trait KeypairStrategy: Send {
     /// Get the chain.
     fn chain(&self) -> Chain;
     /// Generate a new keypair.
     fn generate(&mut self);
-    /// Recover a keypair from a bytes.
+    /// Recover a keypair from a secret string.
     fn recover_secret(&mut self, secret: &str) -> Result<(), DatabaseError>;
     /// Recover a keypair from a bytes.
     fn recover_from_bytes(&mut self, bytes: &[u8]) -> Result<(), DatabaseError>;
@@ -50,7 +50,7 @@ pub trait KeypairStrategy {
     /// Get the address key.
     fn address(&self) -> String;
     /// Sign a message with a external secret.
-    fn sign(&self, secret: &[u8], message: &[u8]) -> Result<String, DatabaseError>;
+    fn sign(&self, message: &[u8]) -> Result<String, DatabaseError>;
 }
 
 #[cfg(test)]
@@ -60,9 +60,9 @@ mod tests {
     #[test]
     fn test_from_str() {
         let chain = Chain::try_from("solana").expect("invalid chain");
-        assert_eq!(chain, Chain::SOLANA);
+        assert_eq!(chain, Chain::Solana);
 
         let chain = Chain::try_from("SOLANA").expect("invalid chain");
-        assert_eq!(chain, Chain::SOLANA);
+        assert_eq!(chain, Chain::Solana);
     }
 }

@@ -172,7 +172,7 @@ mod tests {
 
         let key = key_gen(&client, &base, "solana").await?;
 
-        let chain: Chain = Chain::SOLANA;
+        let chain: Chain = Chain::Solana;
         let message = "hello".to_string();
         let result = key_sign(
             &client,

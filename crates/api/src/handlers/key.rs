@@ -105,10 +105,9 @@ pub async fn key_sign(
     let chain = Chain::from_str(&key.key.chain)
         .map_err(|e| SrvErrorKind::Http(StatusCode::BAD_REQUEST, e.to_string()))?;
 
-    let context = KeypairContext::from_chain(chain);
-
+    let keypair = KeypairContext::create_keypair(chain);
     let message = body.message.as_bytes();
-    let signature = key.sign(context.keypair(), message)?;
+    let signature = key.sign(keypair, message)?;
 
     Ok(HttpResponse::Ok().json(KeySignResponse {
         signature,

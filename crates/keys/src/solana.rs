@@ -3,6 +3,7 @@ use solana_sdk::signature::{Keypair, Signer};
 
 use crate::{Chain, DatabaseError, KeypairStrategy};
 
+#[derive(Debug)]
 pub struct SolanaKeyPair(Keypair);
 
 impl SolanaKeyPair {
@@ -17,7 +18,7 @@ impl SolanaKeyPair {
 
 impl KeypairStrategy for SolanaKeyPair {
     fn chain(&self) -> Chain {
-        Chain::SOLANA
+        Chain::Solana
     }
 
     fn generate(&mut self) {
@@ -25,8 +26,7 @@ impl KeypairStrategy for SolanaKeyPair {
     }
 
     fn recover_secret(&mut self, secret: &str) -> Result<(), DatabaseError> {
-        let keypair = Keypair::from_base58_string(secret);
-        self.0 = keypair;
+        self.0 = Keypair::from_base58_string(secret);
         Ok(())
     }
 
@@ -54,10 +54,8 @@ impl KeypairStrategy for SolanaKeyPair {
     }
 
     /// sign message with hex secret u8a
-    fn sign(&self, secret: &[u8], message: &[u8]) -> Result<String, DatabaseError> {
-        let keypair =
-            Keypair::from_bytes(secret).map_err(|e| DatabaseError::SecretError(e.to_string()))?;
-        let signature = keypair.sign_message(message);
+    fn sign(&self, message: &[u8]) -> Result<String, DatabaseError> {
+        let signature = self.0.sign_message(message);
         let signature = bs58::encode(signature).into_string();
         Ok(signature)
     }

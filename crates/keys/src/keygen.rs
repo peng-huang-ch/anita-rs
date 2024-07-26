@@ -17,12 +17,11 @@ use crate::KeypairContext;
 /// use r_keys::{Chain, KeypairContext, keygen::keygen};
 /// let num_threads = 4;
 /// let target_suffix = "p";
-/// let secret = keygen(num_threads, target_suffix, Chain::SOLANA);
-/// let context = KeypairContext::from_chain_secret(Chain::SOLANA, secret.as_str());
+/// let context = keygen(num_threads, target_suffix, Chain::Solana);
 /// let keypair = context.keypair();
 /// assert!(keypair.pubkey().ends_with(target_suffix));
 /// ```
-pub fn keygen(num_threads: u8, target_suffix: &str, chain: Chain) -> String {
+pub fn keygen(num_threads: u8, target_suffix: &str, chain: Chain) -> KeypairContext {
     info!(
         "Searching for addresses ending with {} and using {} threads",
         target_suffix, num_threads
@@ -38,9 +37,8 @@ pub fn keygen(num_threads: u8, target_suffix: &str, chain: Chain) -> String {
             let context = KeypairContext::from_chain(chain.clone());
             let keypair = context.keypair();
             let pubkey = keypair.pubkey();
-            let secret = keypair.secret();
             if pubkey.ends_with(&target_suffix) {
-                if sender.send(secret).is_ok() {
+                if sender.send(context).is_ok() {
                     found
                         .compare_exchange(false, true, Ordering::SeqCst, Ordering::Relaxed)
                         .expect("Try to exchange the found failed");
@@ -66,11 +64,10 @@ mod tests {
     fn test_keygen() {
         let num_threads = 4;
         let target_suffix = "p";
-        let secret = keygen(num_threads, target_suffix, Chain::SOLANA);
-        let context = KeypairContext::from_chain_secret(Chain::SOLANA, secret.as_str());
+        let context: KeypairContext = keygen(num_threads, target_suffix, Chain::Solana);
         let keypair = context.keypair();
-        println!("secret: {}", secret);
-        println!("pubkey: {}", keypair.pubkey());
+        println!("secret: {}", context.keypair().secret());
+        println!("pubkey: {}", context.keypair().pubkey());
         assert!(keypair.pubkey().ends_with(target_suffix));
     }
 }

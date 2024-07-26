@@ -1,5 +1,4 @@
 use clap::{Parser, Subcommand};
-use r_api::KeypairContext;
 
 use crate::{
     keys::keygen::keygen,
@@ -25,7 +24,7 @@ pub struct Command {
     seed: Option<String>,
 
     /// The chain to use
-    #[clap(short, long, value_enum, default_value_t = Chain::SOLANA)]
+    #[clap(short, long, value_enum, default_value_t = Chain::Solana)]
     chain: Chain,
 
     /// The suffix to search
@@ -72,26 +71,24 @@ impl Command {
                 println!("key: {:?}", key);
             }
             Subcommands::New { count, .. } => {
-                let secret = keygen(count, suffix.as_str(), chain);
-                let context = KeypairContext::from_chain_secret(chain, secret.as_str());
+                let context = keygen(count, suffix.as_str(), chain);
                 let keypair = context.keypair();
 
                 let key = NewKey::from_keypair(keypair, Some(suffix.clone()));
                 let _ = database.create_key(key).await?;
 
-                println!("key: {}", secret);
+                println!("key: {}", keypair.secret());
                 println!("address : {}", keypair.address());
             }
             Subcommands::Vanity { count, .. } => loop {
-                let secret = keygen(count, suffix.as_str(), chain);
-                let context = KeypairContext::from_chain_secret(chain, secret.as_str());
+                let context = keygen(count, suffix.as_str(), chain);
                 let keypair = context.keypair();
 
                 let mut key = NewKey::from_keypair(keypair, Some(suffix.clone()));
                 key.used_at = Some(chrono::Utc::now().naive_utc());
 
                 let _ = database.create_key(key).await?;
-                println!("key: {}", secret);
+                println!("key: {}", keypair.secret());
                 println!("address : {}", keypair.address());
             },
         }

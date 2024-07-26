@@ -12,7 +12,7 @@ use crate::{
 #[command(version, about, long_about = None)]
 pub struct Command {
     /// The chain to use
-    #[clap(short, long, value_enum, default_value_t = Chain::SOLANA)]
+    #[clap(short, long, value_enum, default_value_t = Chain::Solana)]
     chain: Chain,
 
     /// The remote server host

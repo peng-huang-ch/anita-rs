@@ -73,11 +73,13 @@ impl KeyWithSecret {
     /// Sign a message with the key pair sign method.
     pub fn sign(
         &self,
-        strategy: &Box<dyn KeypairStrategy>,
+        mut keypair: Box<dyn KeypairStrategy>,
         message: &[u8],
     ) -> Result<String, DatabaseError> {
-        let bytes = &self.into_vec()?;
-        let signature = strategy.sign(bytes, message)?;
+        let bytes = self.into_vec()?;
+        keypair.recover_from_bytes(bytes.as_slice())?;
+
+        let signature = keypair.sign(message)?;
         Ok(signature)
     }
 }
@@ -103,7 +105,7 @@ pub struct NewKey {
 
 impl NewKey {
     pub fn from_keypair(keypair: &Box<dyn KeypairStrategy>, suffix: Option<String>) -> NewKey {
-        let address = keypair.address();
+        let address: String = keypair.address();
         let secret = keypair.to_vec();
         let suffix = suffix
             .map(|f| f.to_ascii_lowercase())
