@@ -8,6 +8,7 @@ use crate::{
     init_db,
     models::{Auth, Chain, Key, KeyWithSecret, NewKey, User},
     pg::DbPool,
+    tracing,
     utils::encryption::{decrypt, encrypt, to_seed},
     DatabaseError, DbConnection,
 };
@@ -45,12 +46,14 @@ impl Database {
 
 #[async_trait]
 impl UserTrait for Database {
+    #[tracing::instrument(skip(self))]
     async fn get_auth_by_email(&self, email: &str) -> Result<Option<Auth>, DatabaseError> {
         let mut conn = self.with_conn().await?;
         let auth = get_auth_by_email(&mut conn, email).await?;
         Ok(auth)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn get_user_by_id(&self, id: i32) -> Result<Option<User>, DatabaseError> {
         let mut conn = self.with_conn().await?;
         let user = get_user_by_id(&mut conn, id).await?;

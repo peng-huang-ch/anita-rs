@@ -15,8 +15,6 @@ pub use r_tracing::{
     tracing,
     tracing::{debug, error, info, warn},
 };
-
-/// Re-exported from `r_storage`.
 pub mod storage {
     pub use r_storage::prelude::*;
 }
@@ -35,6 +33,7 @@ fn get_session_key_from_env() -> Key {
     key
 }
 
+#[tracing::instrument(skip(database))]
 pub async fn init_api(port: u16, database: Database) -> std::io::Result<()> {
     let addr = format!("0.0.0.0:{}", port);
 

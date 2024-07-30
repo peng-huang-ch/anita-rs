@@ -26,7 +26,7 @@ strum_macros = { workspace = true }
 aes-gcm = { version = "0.10.3" }
 
 # database
-diesel = { version = "2.2.1", default-features = false, features = [
+diesel = { version = "2.2.2", default-features = false, features = [
 	"chrono",
 	"postgres",
 ] }

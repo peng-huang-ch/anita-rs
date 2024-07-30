@@ -4,7 +4,6 @@ use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{
     filter::EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt, Layer,
 };
-
 // Re-export tracing crates
 pub use tracing;
 pub use tracing_error::SpanTrace;
@@ -19,12 +18,12 @@ pub fn init_logging(srv_name: String, level: String) -> WorkerGuard {
     // Start a new Jaeger trace pipeline.
     // Spans are exported in batch - recommended setup for a production application.
     global::set_text_map_propagator(TraceContextPropagator::new());
-    // let tracer = opentelemetry_jaeger::new_agent_pipeline()
-    //     .with_service_name(srv_name.clone())
-    //     .install_batch(opentelemetry::runtime::Tokio)
-    //     .expect("Failed to install OpenTelemetry tracer.");
+    let tracer = opentelemetry_jaeger::new_agent_pipeline()
+        .with_service_name(srv_name.clone())
+        .install_batch(opentelemetry::runtime::Tokio)
+        .expect("Failed to install OpenTelemetry tracer.");
     // Create a `tracing` layer using the Jaeger tracer
-    // let telemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
+    let telemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
 
     // Filter based on level - trace, debug, info, warn, error
     // Tunable via `RUST_LOG` env variable
@@ -42,7 +41,7 @@ pub fn init_logging(srv_name: String, level: String) -> WorkerGuard {
     // Combined them all together in a `tracing` subscriber
     let subscriber = tracing_subscriber::registry()
         .with(env_filter)
-        // .with(telemetry_layer)
+        .with(telemetry_layer)
         .with(file_layer)
         .with(JsonStorageLayer)
         .with(std_layer);

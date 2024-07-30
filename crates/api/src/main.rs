@@ -1,5 +1,5 @@
 use r_storage::Database;
-use r_tracing::init_logging;
+use r_tracing::{init_logging, tracing::debug};
 
 #[tokio::main]
 async fn main() {
@@ -8,6 +8,7 @@ async fn main() {
     // log server and level
     let server = std::env::var("LOG_SERVER").unwrap_or("anita::api".to_string());
     let level = std::env::var("LOG_LEVEL").unwrap_or("info".to_string());
+    let guard = init_logging(server, level);
 
     // api port and database url
     let port = std::env::var("PORT")
@@ -17,9 +18,12 @@ async fn main() {
     let seed = std::env::var("SEED").ok();
     let seed =
         seed.map(|s| Database::to_seed(s.as_str()).expect("Seed must be a valid hex string"));
+
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    debug!(target: "init", "Initializing database...");
     let database = Database::new_with_url(&database_url, seed).await;
-    let guard = init_logging(server, level);
+    debug!(target: "init", "Database connected.");
+
     let _api = r_api::init_api(port, database).await.expect("could not start api server");
     drop(guard);
 }
